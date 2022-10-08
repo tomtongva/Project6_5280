@@ -23,10 +23,11 @@ app.use(bodyParser.urlencoded({extended:false}));
 app.post('/sms', async (req, res) => { // respond to text message
     const twiml = new MessagingResponse();
   
-    twiml.message('Welcome to the study');
-  
     let reqText = req.body.Body.toLowerCase();
     console.log("text from user " + reqText);
+
+    if (reqText == "start")
+        twiml.message('Welcome to the study');
 
     try {
         let existingSurvey = await findExistingSurvey(req.body.From, reqText);
@@ -40,16 +41,22 @@ app.post('/sms', async (req, res) => { // respond to text message
             return;
         }
 
-        await updateSurvey(req.body.From, reqText);
-        let symptoms = await getSymptoms();
-        let question = "Please indicate your symptom ";
-        let cnt = 0;
-        for (const symptom of symptoms) {
-            question = question + "(" + cnt++ + ")" + symptom + ", ";
-        }
-        question = question.substring(0, question.lastIndexOf(','));
+        if ( !(existingSurvey.progress.length > 1) {
+            await updateSurvey(req.body.From, reqText);
+            let symptoms = await getSymptoms();
+            let question = "Please indicate your symptom ";
+            let cnt = 0;
+            for (const symptom of symptoms) {
+                question = question + "(" + cnt++ + ")" + symptom + ", ";
+            }
+            question = question.substring(0, question.lastIndexOf(','));
 
-        twiml.message(question);
+            twiml.message(question);
+        } else {
+            let question = "On a scale from 0 (none) to 4 (severe), how would you rate your " + existingSurvey.progress[1] +
+                            " in the last 24 hours?";
+            twiml.message(question);        
+        }
     } catch (exception) {
         console.log(exception);
         twiml.message('Survey unavailable at this time');
