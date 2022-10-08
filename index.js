@@ -20,11 +20,23 @@ const twilioClient = new twilio(accountSid, authToken);
 app.use(bodyParser.urlencoded({extended:false}));
 
 // *********************************** START TWILIO ***********************************
-app.post('/sms', (req, res) => { // respond to text message
+app.post('/sms', async (req, res) => { // respond to text message
     const twiml = new MessagingResponse();
   
     twiml.message('The Robots are coming! Head for the hills!' + req.body.Body + ' ' + req.body.From);
   
+    try {
+        await insertPhoneNumber(req.body.From);
+        let questions = await getQuestions();
+        twiml.message(questions[0]);
+    } catch (exception) {
+        console.log(exception);
+        twiml.message('Survey unavailable at this time');
+        res.type('text/xml').send(twiml.toString);
+        return;
+      }
+
+
     res.type('text/xml').send(twiml.toString());
 });
 
@@ -55,7 +67,7 @@ async function insertPhoneNumber(
       const doc = {
         phoneNumber: phoneNumber
       };
-      const result = await mongoClient.db("users").collection("user").insertOne(doc);
+      const result = await mongoClient.db("surveys").collection("survey").insertOne(doc);
       if (result) {
         console.log("phone number inserted " + result.insertedId);
         return result.insertedId;
@@ -64,6 +76,21 @@ async function insertPhoneNumber(
       await mongoClient.close();
     }
   }
+
+ async function getQuestions() {
+    try {
+        await client.connect();
+    
+        var questions = await client
+          .db("surveys")
+          .collection("questions")
+          .find();
+    
+          return questions;
+      } finally {
+        await client.close();
+      }
+}
 // *********************************** END MONGODB ***********************************
 
 // *********************************** START ENDPOINT ***********************************
