@@ -29,7 +29,7 @@ app.post('/sms', async (req, res) => { // respond to text message
     console.log("text from user " + reqText);
 
     try {
-        let existingSurvey = findExistingSurvey(req.body.From, reqText);
+        let existingSurvey = await findExistingSurvey(req.body.From, reqText);
 
         console.log("existing survey exists? " + existingSurvey);
 
