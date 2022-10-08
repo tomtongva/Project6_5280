@@ -27,9 +27,9 @@ app.post('/sms', async (req, res) => { // respond to text message
   
     let reqText = req.body.Body.toLowerCase();
     console.log("text from user " + reqText);
-    
-    if (reqText !== "start" || reqText !== "0" || reqText !== "1" || reqText !== "2" || reqText !== "3" ||
-            reqText !== "4" || reqText !== "5") {
+
+    if (reqText != "start" || reqText != "0" || reqText != "1" || reqText != "2" || reqText != "3" ||
+            reqText != "4" || reqText != "5") {
         twiml.message('The Robots are coming! Head for the hills! ' + req.body.Body + ' ' + req.body.From);
         res.type('text/xml').send(twiml.toString());
         return;
