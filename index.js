@@ -41,7 +41,7 @@ app.post('/sms', async (req, res) => { // respond to text message
             return;
         }
 
-        if ( !(existingSurvey.progress.length > 1) {
+        if ( !(existingSurvey.progress.length > 1)) {
             await updateSurvey(req.body.From, reqText);
             let symptoms = await getSymptoms();
             let question = "Please indicate your symptom ";
