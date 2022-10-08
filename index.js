@@ -21,7 +21,7 @@ const twilioClient = new twilio(accountSid, authToken);
 app.post('/sms', (req, res) => { // respond to text message
     const twiml = new MessagingResponse();
   
-    twiml.message('The Robots are coming! Head for the hills!' + req.Body);
+    twiml.message('The Robots are coming! Head for the hills!' + req.SmsSid);
   
     res.type('text/xml').send(twiml.toString());
 });
