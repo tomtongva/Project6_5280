@@ -79,16 +79,16 @@ async function insertPhoneNumber(
 
  async function getQuestions() {
     try {
-        await client.connect();
+        await mongoClient.connect();
     
-        var questions = await client
+        var questions = await mongoClient
           .db("surveys")
           .collection("questions")
           .find();
     
           return questions;
       } finally {
-        await client.close();
+        await mongoClient.close();
       }
 }
 // *********************************** END MONGODB ***********************************
