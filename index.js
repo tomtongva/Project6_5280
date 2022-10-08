@@ -32,7 +32,7 @@ app.post('/sms', async (req, res) => { // respond to text message
     } catch (exception) {
         console.log(exception);
         twiml.message('Survey unavailable at this time');
-        res.type('text/xml').send(twiml.toString);
+        res.type('text/xml').send(twiml.toString());
         return;
       }
 
