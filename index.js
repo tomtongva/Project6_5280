@@ -126,12 +126,12 @@ async function findExistingSurvey(phoneNumber, reqText) {
     try {
         await mongoClient.connect();
     
-        var symptoms = await mongoClient
+        var survey = await mongoClient
           .db("surveys")
-          .collection("symptoms")
+          .collection("survey")
           .findOne({phoneNumber: phoneNumber});
 
-        return symptoms.symptoms;
+        return symptoms;
       } finally {
         await mongoClient.close();
       }
