@@ -27,8 +27,13 @@ app.post('/sms', async (req, res) => { // respond to text message
   
     try {
         await insertPhoneNumber(req.body.From);
-        let allSymptoms = await getAllSymptoms();
-        twiml.message("Please indicate your symptom " + allSymptoms);
+        let symptoms = await getSymptoms();
+        let question = "Please indicate your symptom ";
+        let cnt = 0;
+        for (const symptom of symptoms)
+            question = question + "(" + cnt + ") " + symptom;
+
+        twiml.message(question);
     } catch (exception) {
         console.log(exception);
         twiml.message('Survey unavailable at this time');
@@ -77,18 +82,15 @@ async function insertPhoneNumber(
     }
   }
 
-
-const Promise = require('bluebird');
-async function getAllSymptoms() {
+async function getSymptoms() {
     try {
         await mongoClient.connect();
     
         var symptoms = await mongoClient
           .db("surveys")
           .collection("symptoms")
-          .find();
+          .findOne({});
 
-        console.log("all symptoms " + symptoms.symptoms);
         return symptoms.symptoms;
       } finally {
         await mongoClient.close();
