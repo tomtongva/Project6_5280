@@ -26,13 +26,15 @@ app.post('/sms', async (req, res) => { // respond to text message
     twiml.message('The Robots are coming! Head for the hills!' + req.body.Body + ' ' + req.body.From);
   
     try {
+        //let existingSurvey = findExistingSurvey(req.body.From);
+
         await insertPhoneNumber(req.body.From);
         let symptoms = await getSymptoms();
         let question = "Please indicate your symptom ";
         let cnt = 0;
         for (const symptom of symptoms)
             question = question + "(" + cnt + ")" + symptom + ", ";
-        question = question.substring(0, question.lastIndexOf(',' - 1));
+        question = question.substring(0, question.lastIndexOf(','));
 
         twiml.message(question);
     } catch (exception) {
