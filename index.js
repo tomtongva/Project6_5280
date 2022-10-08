@@ -52,11 +52,16 @@ app.post('/sms', async (req, res) => { // respond to text message
             question = question.substring(0, question.lastIndexOf(','));
 
             twiml.message(question);
-        } else if (Number.isFinite(Number(reqText)) && Number(reqText) >= 0 && Number(reqText) <= 5) {
-            await updateSurvey(req.body.From, reqText);
-            let question = "On a scale from 0 (none) to 4 (severe), how would you rate your " + existingSurvey.progress[1] +
-                            " in the last 24 hours?";   
-            twiml.message(question);
+        } else if (Number.isFinite(Number(reqText))) {            
+            await updateSurvey(req.body.From, "symptom " + reqText);
+            let lastProgress = existingSurvey.survey.progress.length[existingSurvey.survey.progress.length-1];
+            let responseText = "On a scale from 0 (none) to 4 (severe), how would you rate your " + existingSurvey.progress[1] +
+                            " in the last 24 hours?";
+
+            if (!lastProgress.contains("symptom"))
+                responseText = "You have a mild xxxx";
+
+            twiml.message(responseText);
         } else {
             twiml.message("Please enter a number from 0 to 5");  
         }
@@ -64,7 +69,7 @@ app.post('/sms', async (req, res) => { // respond to text message
         console.log(exception);
         twiml.message('Survey unavailable at this time');
         return;
-      }
+    }
 
 
     res.type('text/xml').send(twiml.toString());
