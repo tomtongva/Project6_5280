@@ -41,6 +41,7 @@ app.post('/sms', async (req, res) => { // respond to text message
             return;
         }
 
+        console.log("logic " + Number.isFinite(reqText) + " " + Number(reqText) >= 0);
         if (existingSurvey == null) {
             await updateSurvey(req.body.From, reqText);
             let symptoms = await getSymptoms();
