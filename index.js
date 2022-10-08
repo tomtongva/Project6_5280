@@ -23,17 +23,27 @@ app.use(bodyParser.urlencoded({extended:false}));
 app.post('/sms', async (req, res) => { // respond to text message
     const twiml = new MessagingResponse();
   
-    twiml.message('The Robots are coming! Head for the hills!' + req.body.Body + ' ' + req.body.From);
+    twiml.message('Welcome to the study');
   
-    try {
-        //let existingSurvey = findExistingSurvey(req.body.From);
+    let reqText = req.body.Body.toLowerCase();
+    if (reqText !== "start" || reqText !== "0" || reqText !== "1" || reqText !== "2" || reqText !== "3" ||
+            reqText !== "4" || reqText !== "5") {
+        twiml.message('The Robots are coming! Head for the hills! ' + req.body.Body + ' ' + req.body.From);
+        res.type('text/xml').send(twiml.toString());
+        return;
+    }
 
+    try {
+        let existingSurvey = findExistingSurvey(req.body.From, reqText);
+
+        console.log("existing survey exists? " + existingSurvey);
+        
         await insertPhoneNumber(req.body.From);
         let symptoms = await getSymptoms();
         let question = "Please indicate your symptom ";
         let cnt = 0;
         for (const symptom of symptoms)
-            question = question + "(" + cnt + ")" + symptom + ", ";
+            question = question + "(" + cnt++ + ")" + symptom + ", ";
         question = question.substring(0, question.lastIndexOf(','));
 
         twiml.message(question);
@@ -67,13 +77,12 @@ function testMsg() {
 // *********************************** END TWILIO ***********************************
 
 // *********************************** START MONGODB ***********************************
-async function insertPhoneNumber(
-    phoneNumber
-  ) {
+async function insertPhoneNumber(phoneNumber) {
     try {
       await mongoClient.connect();
       const doc = {
-        phoneNumber: phoneNumber
+        phoneNumber: phoneNumber,
+        progress: ['START']
       };
       const result = await mongoClient.db("surveys").collection("survey").insertOne(doc);
       if (result) {
@@ -83,9 +92,9 @@ async function insertPhoneNumber(
     } finally {
       await mongoClient.close();
     }
-  }
+}
 
-async function getSymptoms() {
+async function getSymptoms(filters) {
     try {
         await mongoClient.connect();
     
@@ -99,6 +108,22 @@ async function getSymptoms() {
         await mongoClient.close();
       }
 }
+
+async function findExistingSurvey(phoneNumber, reqText) {
+    try {
+        await mongoClient.connect();
+    
+        var symptoms = await mongoClient
+          .db("surveys")
+          .collection("symptoms")
+          .findOne({reqText});
+
+        return symptoms.symptoms;
+      } finally {
+        await mongoClient.close();
+      }
+}
+
 // *********************************** END MONGODB ***********************************
 
 // *********************************** START ENDPOINT ***********************************
