@@ -88,7 +88,8 @@ async function getAllSymptoms() {
           .collection("symptoms")
           .find();
 
-        return {$objectToArray: "$symptoms"};
+        console.log("all symptoms " + symptoms.symptoms);
+        return symptoms.symptoms;
       } finally {
         await mongoClient.close();
       }
