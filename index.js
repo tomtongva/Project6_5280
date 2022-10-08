@@ -39,4 +39,4 @@ app.get('/', (req, res) => {
 app.listen(process.env.PORT || port, () => {
     console.log(`Listening on port ${port}`);
     console.log(`${process.env.PORT}`);
-  });
+});
