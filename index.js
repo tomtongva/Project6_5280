@@ -129,7 +129,7 @@ async function findExistingSurvey(phoneNumber, reqText) {
         var symptoms = await mongoClient
           .db("surveys")
           .collection("symptoms")
-          .findOne({phoneNumber: phoneNuber});
+          .findOne({phoneNumber: phoneNumber});
 
         return symptoms.symptoms;
       } finally {
