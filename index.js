@@ -28,7 +28,7 @@ app.post('/sms', async (req, res) => { // respond to text message
     try {
         await insertPhoneNumber(req.body.From);
         let allSymptoms = await getAllSymptoms();
-        twiml.message("Please indicate your symptom " + allSymptoms[0]);
+        twiml.message("Please indicate your symptom " + allSymptoms);
     } catch (exception) {
         console.log(exception);
         twiml.message('Survey unavailable at this time');
