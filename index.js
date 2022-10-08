@@ -56,14 +56,13 @@ app.post('/sms', async (req, res) => { // respond to text message
             await updateSurvey(req.body.body.From, reqText);
             let question = "On a scale from 0 (none) to 4 (severe), how would you rate your " + existingSurvey.progress[1] +
                             " in the last 24 hours?";   
+            twiml.message(question);
         } else {
             twiml.message("Please enter a number from 0 to 5");  
-            res.type('text/xml').send(twilio.toString());
         }
     } catch (exception) {
         console.log(exception);
         twiml.message('Survey unavailable at this time');
-        res.type('text/xml').send(twiml.toString());
         return;
       }
 
