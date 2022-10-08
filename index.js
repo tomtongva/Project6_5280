@@ -81,12 +81,14 @@ async function insertPhoneNumber(
     try {
         await mongoClient.connect();
     
-        var questions = await mongoClient
+        var symptoms = await mongoClient
           .db("surveys")
           .collection("symptoms")
           .find();
+
+        console.log("all symptoms " + symptoms);
     
-          return questions;
+        return symptoms;
       } finally {
         await mongoClient.close();
       }
