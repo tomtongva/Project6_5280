@@ -23,7 +23,7 @@ app.use(bodyParser.urlencoded({extended:false}));
 app.post('/sms', (req, res) => { // respond to text message
     const twiml = new MessagingResponse();
   
-    twiml.message('The Robots are coming! Head for the hills!' + req.body.Body);
+    twiml.message('The Robots are coming! Head for the hills!' + req.body.Body + ' ' + req.body.From);
   
     res.type('text/xml').send(twiml.toString());
 });
@@ -47,33 +47,21 @@ function testMsg() {
 // *********************************** END TWILIO ***********************************
 
 // *********************************** START MONGODB ***********************************
-async function createUser(
-    email,
-    password,
-    firstName,
-    lastName,
-    gender,
-    city,
-    customerId
+async function insertPhoneNumber(
+    phoneNumber
   ) {
     try {
-      await client.connect();
+      await mongoClient.connect();
       const doc = {
-        email: email,
-        password: password,
-        firstName: firstName,
-        lastName: lastName,
-        gender: gender,
-        city: city,
-        customerId: customerId,
+        phoneNumber: phoneNumber
       };
-      const result = await client.db("users").collection("user").insertOne(doc);
+      const result = await mongoClient.db("users").collection("user").insertOne(doc);
       if (result) {
-        console.log("user created with id " + result.insertedId);
+        console.log("phone number inserted " + result.insertedId);
         return result.insertedId;
       }
     } finally {
-      await client.close();
+      await mongoClient.close();
     }
   }
 // *********************************** END MONGODB ***********************************
