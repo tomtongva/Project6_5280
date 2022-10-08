@@ -83,12 +83,12 @@ async function getAllSymptoms() {
     try {
         await mongoClient.connect();
     
-        var symptomsCol = await mongoClient
+        var symptoms = await mongoClient
           .db("surveys")
           .collection("symptoms")
           .find();
 
-        return Promise.resolve(symptomsCol.toArray());
+        return {$objectToArray: "$symptoms"};
       } finally {
         await mongoClient.close();
       }
