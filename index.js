@@ -31,7 +31,8 @@ app.post('/sms', async (req, res) => { // respond to text message
         let question = "Please indicate your symptom ";
         let cnt = 0;
         for (const symptom of symptoms)
-            question = question + "(" + cnt + ") " + symptom;
+            question = question + "(" + cnt + ")" + symptom + ", ";
+        question = question.substring(0, question.lastIndexOf(',' - 1));
 
         twiml.message(question);
     } catch (exception) {
