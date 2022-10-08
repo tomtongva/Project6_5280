@@ -26,6 +26,8 @@ app.post('/sms', async (req, res) => { // respond to text message
     twiml.message('Welcome to the study');
   
     let reqText = req.body.Body.toLowerCase();
+    console.log("text from user " + reqText);
+    
     if (reqText !== "start" || reqText !== "0" || reqText !== "1" || reqText !== "2" || reqText !== "3" ||
             reqText !== "4" || reqText !== "5") {
         twiml.message('The Robots are coming! Head for the hills! ' + req.body.Body + ' ' + req.body.From);
@@ -37,7 +39,7 @@ app.post('/sms', async (req, res) => { // respond to text message
         let existingSurvey = findExistingSurvey(req.body.From, reqText);
 
         console.log("existing survey exists? " + existingSurvey);
-        
+
         await insertPhoneNumber(req.body.From);
         let symptoms = await getSymptoms();
         let question = "Please indicate your symptom ";
