@@ -84,7 +84,7 @@ async function insertPhoneNumber(
         var symptoms = await mongoClient
           .db("surveys")
           .collection("symptoms")
-          .find();
+          .find().toArray();
 
         console.log("all symptoms " + symptoms);
     
