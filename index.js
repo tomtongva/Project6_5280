@@ -131,7 +131,7 @@ async function findExistingSurvey(phoneNumber, reqText) {
           .collection("survey")
           .findOne({phoneNumber: phoneNumber});
 
-        return symptoms;
+        return survey;
       } finally {
         await mongoClient.close();
       }
