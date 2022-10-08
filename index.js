@@ -41,7 +41,6 @@ app.post('/sms', async (req, res) => { // respond to text message
             return;
         }
 
-        console.log("logic -- " + Number.isFinite(reqText));
         if (existingSurvey == null) {
             await updateSurvey(req.body.From, reqText);
             let symptoms = await getSymptoms();
@@ -53,7 +52,7 @@ app.post('/sms', async (req, res) => { // respond to text message
             question = question.substring(0, question.lastIndexOf(','));
 
             twiml.message(question);
-        } else if (Number.isFinite(reqText) && Number(reqText) >= 0 && Number(reqText) <= 5) {
+        } else if (Number.isFinite(Number(reqText)) && Number(reqText) >= 0 && Number(reqText) <= 5) {
             await updateSurvey(req.body.body.From, reqText);
             let question = "On a scale from 0 (none) to 4 (severe), how would you rate your " + existingSurvey.progress[1] +
                             " in the last 24 hours?";   
