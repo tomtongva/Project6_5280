@@ -77,18 +77,18 @@ async function insertPhoneNumber(
     }
   }
 
- async function getAllSymptoms() {
+
+const Promise = require('bluebird');
+async function getAllSymptoms() {
     try {
         await mongoClient.connect();
     
-        var symptoms = await mongoClient
+        var symptomsCol = await mongoClient
           .db("surveys")
           .collection("symptoms")
-          .find().toArray();
+          .find();
 
-        console.log("all symptoms " + symptoms);
-    
-        return symptoms;
+        return Promise.resolve(symptomsCol.toArray());
       } finally {
         await mongoClient.close();
       }
