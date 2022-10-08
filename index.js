@@ -2,9 +2,9 @@ const twilio = require('twilio');
 const { MessagingResponse } = require('twilio').twiml; // respond to text message
 const { TaskQueueRealTimeStatisticsPage } = require('twilio/lib/rest/taskrouter/v1/workspace/taskQueue/taskQueueRealTimeStatistics');
 
-
 const express = require('express');
 const app = express();
+const bodyParser = require('body-parser');
 const port = 80;
 
 const { MongoClient } = require("mongodb");
@@ -17,11 +17,13 @@ const authToken = '7148510de1995ea197ebc2ef68fa06df'; // Your Auth Token from ww
 
 const twilioClient = new twilio(accountSid, authToken);
 
+app.use(bodyParser.urlencoded({extended:false}));
+
 // *********************************** START TWILIO ***********************************
 app.post('/sms', (req, res) => { // respond to text message
     const twiml = new MessagingResponse();
   
-    twiml.message('The Robots are coming! Head for the hills!' + req.SmsSid);
+    twiml.message('The Robots are coming! Head for the hills!' + req.body.Body);
   
     res.type('text/xml').send(twiml.toString());
 });
