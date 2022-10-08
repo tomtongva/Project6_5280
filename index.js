@@ -27,8 +27,8 @@ app.post('/sms', async (req, res) => { // respond to text message
   
     try {
         await insertPhoneNumber(req.body.From);
-        let questions = await getQuestions();
-        twiml.message(questions[0]);
+        let allSymptoms = await getAllSymptoms();
+        twiml.message("Please indicate your symptom " + allSymptoms[0]);
     } catch (exception) {
         console.log(exception);
         twiml.message('Survey unavailable at this time');
@@ -77,13 +77,13 @@ async function insertPhoneNumber(
     }
   }
 
- async function getQuestions() {
+ async function getAllSymptoms() {
     try {
         await mongoClient.connect();
     
         var questions = await mongoClient
           .db("surveys")
-          .collection("questions")
+          .collection("symptoms")
           .find();
     
           return questions;
