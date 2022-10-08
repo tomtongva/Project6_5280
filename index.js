@@ -109,6 +109,7 @@ async function updateSurvey(phoneNumber, progress) {
 
 async function getSymptoms() {
     try {
+        console.log("getting all symptoms");
         await mongoClient.connect();
     
         var symptoms = await mongoClient
