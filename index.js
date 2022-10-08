@@ -28,24 +28,25 @@ app.post('/sms', async (req, res) => { // respond to text message
     let reqText = req.body.Body.toLowerCase();
     console.log("text from user " + reqText);
 
-    if (reqText != "start" || reqText != "0" || reqText != "1" || reqText != "2" || reqText != "3" ||
-            reqText != "4" || reqText != "5") {
-        twiml.message('The Robots are coming! Head for the hills! ' + req.body.Body + ' ' + req.body.From);
-        res.type('text/xml').send(twiml.toString());
-        return;
-    }
-
     try {
         let existingSurvey = findExistingSurvey(req.body.From, reqText);
 
         console.log("existing survey exists? " + existingSurvey);
 
-        await insertPhoneNumber(req.body.From);
+        
+        if (existingSurvey == null && reqText !== 'start') {
+            twiml.message('The Robots are coming! Head for the hills! ' + req.body.Body + ' ' + req.body.From);
+            res.type('text/xml').send(twiml.toString());
+            return;
+        }
+
+        await updateSurvey(req.body.From, reqText);
         let symptoms = await getSymptoms();
         let question = "Please indicate your symptom ";
         let cnt = 0;
-        for (const symptom of symptoms)
+        for (const symptom of symptoms) {
             question = question + "(" + cnt++ + ")" + symptom + ", ";
+        }
         question = question.substring(0, question.lastIndexOf(','));
 
         twiml.message(question);
@@ -79,24 +80,34 @@ function testMsg() {
 // *********************************** END TWILIO ***********************************
 
 // *********************************** START MONGODB ***********************************
-async function insertPhoneNumber(phoneNumber) {
+async function updateSurvey(phoneNumber, progress) {
     try {
       await mongoClient.connect();
-      const doc = {
-        phoneNumber: phoneNumber,
-        progress: ['START']
-      };
-      const result = await mongoClient.db("surveys").collection("survey").insertOne(doc);
-      if (result) {
-        console.log("phone number inserted " + result.insertedId);
-        return result.insertedId;
+      if (progress == "start") {
+        const doc = {
+            phoneNumber: phoneNumber,
+            progress: ['START']
+        };
+        const result = await mongoClient.db("surveys").collection("survey").insertOne(doc);
+        if (result) {
+            console.log("phone number inserted " + result.insertedId);
+            return result.insertedId;
+        }
+      } else {
+        const result = await mongoClient.db("surveys").collection("survey").updateOne({
+                phoneNumber: phoneNumber
+            }, {
+                $push: {progress: progress}
+            }
+        );
       }
+      
     } finally {
       await mongoClient.close();
     }
 }
 
-async function getSymptoms(filters) {
+async function getSymptoms() {
     try {
         await mongoClient.connect();
     
@@ -118,7 +129,7 @@ async function findExistingSurvey(phoneNumber, reqText) {
         var symptoms = await mongoClient
           .db("surveys")
           .collection("symptoms")
-          .findOne({reqText});
+          .findOne({phoneNumber: phoneNuber});
 
         return symptoms.symptoms;
       } finally {
