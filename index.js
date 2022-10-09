@@ -43,7 +43,6 @@ app.post('/sms', async (req, res) => { // respond to text message
 
         if (existingSurvey == null) {
             let result = await updateSurvey(req.body.From, reqText);
-            console.log("update result " + result.symptomNumber);
 
             let symptoms = await getSymptoms();
             let completedSymptoms = await getCompletedSymptoms();
@@ -185,7 +184,7 @@ async function getCompletedSymptoms(phoneNumber) {
           .collection("survey")
           .findOne({phoneNumber: phoneNumber});
 
-        return survey.symptomNumbers;
+        return survey.symptomDescription;
       } finally {
         await mongoClient.close();
       }
