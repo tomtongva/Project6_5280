@@ -96,7 +96,9 @@ app.post('/sms', async (req, res) => { // respond to text message
                 }
             }
             else {
-                const symptoms = await getSymptoms();
+                for (const symptom of completedSymptoms) {
+                    removeValueFromArray(symptoms, symptom);
+                }
                 await updateSurvey(req.body.From, "symptom " + symptoms[Number(reqText)]); // user sent in symptom number, so insert into DB
             }
 
