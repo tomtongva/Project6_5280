@@ -60,6 +60,7 @@ app.post('/sms', async (req, res) => { // respond to text message
             if (lastProgress.includes("symptom")) {
                 let responseText = await getSeverity(Number(reqText));
                 responseText = responseText + lastProgress.replace("symptom", "");
+                console.log("respond with " + responseText);
                 await deleteSurvey(req.body.From);
             }
             else await updateSurvey(req.body.From, "symptom " + reqText); // user sent in symptom number, so insert into DB
