@@ -78,10 +78,12 @@ app.post('/sms', async (req, res) => { // respond to text message
         
                 // let completedSymptoms = await getCompletedSymptoms(req.body.From);
                 if (completedSymptoms.length >= 3) {
+                    console.log("final respones to user because 3 or more surveys");
                     await deleteSurvey(req.body.From);
                     twiml.message(responseText);
                     responseText = "Thank you and see you soon";
-                    question = null;
+                    twiml.message(responseText);
+                    return;
                 } else {
                     console.log("completed symptom survey " + completedSymptoms);
                     console.log("all symptoms " + symptoms);
