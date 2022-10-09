@@ -49,6 +49,8 @@ app.post('/sms', async (req, res) => { // respond to text message
           }
         }
 
+
+        let question = null;
         let cnt = 0;
         for (const symptom of symptoms) {
             question = question + "(" + cnt++ + ")" + symptom + ", ";
@@ -64,8 +66,6 @@ app.post('/sms', async (req, res) => { // respond to text message
         } else if (Number.isFinite(Number(reqText)) && (Number(reqText) >= 0) && (Number(reqText) >= cnt)) {            
             let lastProgress = existingSurvey.progress[existingSurvey.progress.length - 1];
             let responseText = null;
-
-            let question = null;
             if (lastProgress.includes("symptom")) {
                 let severityArray = await getSeverity();
                 lastProgress = lastProgress.replace("symptom", "");
