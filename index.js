@@ -29,6 +29,7 @@ app.post('/sms', async (req, res) => { // respond to text message
         twiml.message('Welcome to the study');
 
     console.log("send start message back");
+    res.type('text/xml').send(twiml.toString());
     return;
 
     try {
