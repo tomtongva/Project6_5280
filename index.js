@@ -114,14 +114,26 @@ app.post('/sms', async (req, res) => { // respond to text message
                             " in the last 24 hours?";
                     question = null;
                 }
+            } else {
+                await updateSurvey(req.body.From, "symptom " + symptoms[Number(reqText)]); // user sent in symptom number, so insert into DB
+                existingSurvey = await findExistingSurvey(req.body.From, reqText);
+
+                if (existingSurvey.progress[1] == "symptom None") {
+                    responseText = "Thank you and we will check with you later";
+                    question = null;
+                    await deleteSurvey(req.body.From);
+                } else {
+                    responseText = "On a scale from 0 (none) to 4 (severe), how would you rate your " + existingSurvey.progress[1].replace("symptom ") +
+                            " in the last 24 hours?";
+                    question = null;
+                }
             }
 
             twiml.message(responseText);
             if (question != null) twiml.message(question);
 
         } else {
-            twiml.message("Please enter a number from 0 to " + cnt); 
-            twiml.message(question);
+            twiml.message("Please enter a number from 0 to " + cnt);
         }
     } catch (exception) {
         console.log(exception);
