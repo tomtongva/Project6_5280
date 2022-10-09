@@ -173,6 +173,7 @@ async function updateSurvey(phoneNumber, progress) {
 }
 
 async function updateCompletedSurvey(phoneNumber, symptomDescription) {
+    symptomDescription = symptomDescription.trim();
     try {
         await mongoClient.connect();
         
