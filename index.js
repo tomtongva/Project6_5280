@@ -74,6 +74,8 @@ app.post('/sms', async (req, res) => { // respond to text message
                 console.log("update user's survey with completed symptom " + lastProgress);
                 await updateCompletedSurvey(req.body.From, lastProgress);
 
+                completedSymptoms = await getCompletedSymptoms(req.body.From);
+        
                 // let completedSymptoms = await getCompletedSymptoms(req.body.From);
                 if (completedSymptoms.length >= 3) {
                     await deleteSurvey(req.body.From);
