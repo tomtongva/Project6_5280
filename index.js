@@ -66,6 +66,7 @@ app.post('/sms', async (req, res) => { // respond to text message
             else { // this is the first time we're getting a text from the user after they sent in "START"
                 const symptoms = await getSymptoms();
                 await updateSurvey(req.body.From, "symptom " + symptoms[Number(reqText)] + "," + Number(reqText)); // user sent in symptom number, so insert into DB
+                res.type('text/xml').send(twiml.toString())
             }
         } else {
             twiml.message("Please enter a number from 0 to 5");
