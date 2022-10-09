@@ -80,9 +80,11 @@ app.post('/sms', async (req, res) => { // respond to text message
                     await deleteSurvey(req.body.From);
                     twilio.message("Thank you and see you soon");
                 } else {
-                        for (const symptom of completedSymptoms) {
-                            symptoms.remove(symptom);
-                        }
+                    console.log("completed symptom survey " + completedSymptoms);
+                    console.log("all symptoms " + symptoms);
+                    for (const symptom of completedSymptoms) {
+                        symptoms.remove(symptom);
+                    }
         
                     let question = "Please indicate your symptom ";
                     let cnt = 0;
