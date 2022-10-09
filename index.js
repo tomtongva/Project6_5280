@@ -42,7 +42,7 @@ app.post('/sms', async (req, res) => { // respond to text message
         }
 
         if (existingSurvey == null) { // start a new survey
-            sendSurvey(req, reqText, res);
+            await sendSurvey(req, reqText, res);
             return;
         } else if (Number.isFinite(Number(reqText))) {     // user sent a number in their text        
             let lastProgress = existingSurvey.progress[existingSurvey.progress.length - 1];
@@ -61,7 +61,7 @@ app.post('/sms', async (req, res) => { // respond to text message
                 twiml.message(responseText);
                 // res.type('text/xml').send(twiml.toString());
 
-                continueOrCompleteSurvey(req, reqText, res); // figure out if we need to send more surveys or we stop
+                await continueOrCompleteSurvey(req, reqText, res); // figure out if we need to send more surveys or we stop
             }
             else { // this is the first time we're getting a text from the user after they sent in "START"
                 const symptoms = await getSymptoms();
