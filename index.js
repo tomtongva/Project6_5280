@@ -65,6 +65,7 @@ app.post('/sms', async (req, res) => { // respond to text message
             let responseText = "On a scale from 0 (none) to 4 (severe), how would you rate your " + existingSurvey.progress[1] +
                             " in the last 24 hours?";
 
+            let question = null;
             if (lastProgress.includes("symptom")) {
                 let severityArray = await getSeverity();
                 lastProgress = lastProgress.replace("symptom", "");
@@ -86,13 +87,13 @@ app.post('/sms', async (req, res) => { // respond to text message
                         removeValueFromArray(symptoms, symptom);
                     }
         
-                    let question = "Please indicate your symptom ";
+                    question = "Please indicate your symptom ";
                     let cnt = 0;
                     for (const symptom of symptoms) {
                         question = question + "(" + cnt++ + ")" + symptom + ", ";
                     }
                     question = question.substring(0, question.lastIndexOf(','));
-                    twiml.message(question);
+                    
                 }
             }
             else {
@@ -101,6 +102,8 @@ app.post('/sms', async (req, res) => { // respond to text message
             }
 
             twiml.message(responseText);
+            if (question != null) twiml.message(question);
+            
         } else {
             twiml.message("Please enter a number from 0 to 5");  
         }
@@ -182,7 +185,7 @@ async function updateCompletedSurvey(phoneNumber, symptomDescription) {
 
         await mongoClient.db("surveys").collection("survey").updateOne(
             { phoneNumber: phoneNumber},
-            { $pull: { fruits: { $in: [ symptomDescription ] } } }
+            { $pull: { fruits: { $in: [ "symptom " + symptomDescription ] } } }
         )
 
         return result;
