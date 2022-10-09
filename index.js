@@ -103,6 +103,7 @@ async function sendSurvey(req, reqText) {
     }
     question = question.substring(0, question.lastIndexOf(","));
 
+    console.log("sending survey");
     twiml.message(question);
 }
 
