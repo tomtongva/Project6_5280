@@ -62,7 +62,7 @@ app.post('/sms', async (req, res) => { // respond to text message
             twiml.message(question);
         } else if (Number.isFinite(Number(reqText))) {            
             let lastProgress = existingSurvey.progress[existingSurvey.progress.length - 1];
-            let responseText = "On a scale from 0 (none) to 4 (severe), how would you rate your " + existingSurvey.progress[1] +
+            let responseText = "On a scale from 0 (none) to 4 (severe), how would you rate your " + lastProgress.replace("symptom ") +
                             " in the last 24 hours?";
 
             let question = null;
