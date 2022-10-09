@@ -58,8 +58,8 @@ app.post('/sms', async (req, res) => { // respond to text message
                             " in the last 24 hours?";
 
             if (lastProgress.includes("symptom")) {
-                let serverityArray = await getSeverity();
-                responseText = serverityArray[Number(reqText)] + lastProgress.replace("symptom", "");
+                let severityArray = await getSeverity();
+                responseText = severityArray[Number(reqText)] + lastProgress.replace("symptom", "");
                 console.log("respond with " + responseText);
                 await deleteSurvey(req.body.From);
             }
@@ -160,12 +160,12 @@ async function getSeverity() {
     try {
         await mongoClient.connect();
     
-        var serverity = await mongoClient
+        var severity = await mongoClient
           .db("surveys")
           .collection("serverity")
           .find({});
 
-        return serverity.severity;
+        return severity.severity;
       } finally {
         await mongoClient.close();
       }
