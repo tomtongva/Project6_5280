@@ -48,12 +48,12 @@ app.post('/sms', async (req, res) => { // respond to text message
             removeValueFromArray(symptoms, symptom);
           }
         }
-
+        
+        let cnt = 0;
         if (existingSurvey == null) {
             let result = await updateSurvey(req.body.From, reqText);
 
             let question = "Please indicate your symptom ";
-            let cnt = 0;
             for (const symptom of symptoms) {
                 question = question + "(" + cnt++ + ")" + symptom + ", ";
             }
