@@ -94,9 +94,7 @@ app.post('/sms', async (req, res) => { // respond to text message
                     // question = question.substring(0, question.lastIndexOf(','));
                     
                 }
-            } else if (existingSurvey.progress[1] == null) {
-                twiml.message(question);
-            } else {
+            } else if (existingSurvey.progress[1] != null) {
                 console.log ("compare symptom" + existingSurvey.progress[1] + "-" + (existingSurvey.progress[1] == "symptom None"));
                 // let completedSymptoms = await getCompletedSymptoms(req.body.From);
                 if (completedSymptoms != null) {
