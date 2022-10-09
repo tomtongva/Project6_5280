@@ -46,8 +46,10 @@ app.post('/sms', async (req, res) => { // respond to text message
 
             let symptoms = await getSymptoms();
             let completedSymptoms = await getCompletedSymptoms();
-            for (const symptom of completedSymptoms) {
-                symptoms.remove(symptom);
+            if (completedSymptoms != null) {
+                for (const symptom of completedSymptoms) {
+                    symptoms.remove(symptom);
+                }
             }
 
             let question = "Please indicate your symptom ";
@@ -184,10 +186,13 @@ async function getCompletedSymptoms(phoneNumber) {
           .collection("survey")
           .findOne({phoneNumber: phoneNumber});
 
-        return survey.symptomDescription;
+        if (survey != null)
+            return survey.symptomDescription;
       } finally {
         await mongoClient.close();
       }
+
+      return;
 }
 
 async function findExistingSurvey(phoneNumber, reqText) {
