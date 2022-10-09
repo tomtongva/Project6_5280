@@ -20,15 +20,16 @@ const twilioClient = new twilio(accountSid, authToken);
 app.use(bodyParser.urlencoded({extended:false}));
 
 // *********************************** START TWILIO ***********************************
-const twiml = new MessagingResponse();
 app.post('/sms', async (req, res) => { // respond to text message
-  
+    const twiml = new MessagingResponse();
     let reqText = req.body.Body.toLowerCase();
     console.log("text from user " + reqText);
 
     if (reqText == "start")
         twiml.message('Welcome to the study');
 
+    return;
+    
     try {
         let existingSurvey = await findExistingSurvey(req.body.From, reqText);
 
