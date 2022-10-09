@@ -53,14 +53,15 @@ app.post('/sms', async (req, res) => { // respond to text message
 
             twiml.message(question);
         } else if (Number.isFinite(Number(reqText))) {            
-            await updateSurvey(req.body.From, "symptom " + reqText);
             let lastProgress = existingSurvey.progress[existingSurvey.progress.length - 1];
-            console.log("last progress " + lastProgress);
             let responseText = "On a scale from 0 (none) to 4 (severe), how would you rate your " + existingSurvey.progress[1] +
                             " in the last 24 hours?";
 
-            if (!lastProgress.includes("symptom"))
+            if (!lastProgress.includes("symptom")) {
                 responseText = "You have a mild xxxx";
+                await deleteSurvey(req.body.From);
+            }
+            else await updateSurvey(req.body.From, "symptom " + reqText); // user sent in symptom number, so insert into DB
 
             twiml.message(responseText);
         } else {
@@ -146,6 +147,21 @@ async function findExistingSurvey(phoneNumber, reqText) {
           .db("surveys")
           .collection("survey")
           .findOne({phoneNumber: phoneNumber});
+
+        return survey;
+      } finally {
+        await mongoClient.close();
+      }
+}
+
+async function deleteSurvey(phoneNumber) {
+    try {
+        await mongoClient.connect();
+    
+        var survey = await mongoClient
+          .db("surveys")
+          .collection("survey")
+          .deleteOne({phoneNumber: phoneNumber});
 
         return survey;
       } finally {
