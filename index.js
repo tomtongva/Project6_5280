@@ -43,6 +43,7 @@ app.post('/sms', async (req, res) => { // respond to text message
 
         if (existingSurvey == null) { // start a new survey
             sendSurvey(req, reqText);
+            return;
         } else if (Number.isFinite(Number(reqText))) {     // user sent a number in their text        
             let lastProgress = existingSurvey.progress[existingSurvey.progress.length - 1];
             let responseText = "On a scale from 0 (none) to 4 (severe), how would you rate your " + existingSurvey.progress[1] +
