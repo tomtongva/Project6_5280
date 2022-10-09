@@ -42,7 +42,8 @@ app.post('/sms', async (req, res) => { // respond to text message
         }
 
         if (existingSurvey == null) {
-            await updateSurvey(req.body.From, reqText);
+            let result = await updateSurvey(req.body.From, reqText);
+            console.log("update result " + result.symptomNumber);
             let symptoms = await getSymptoms();
             let question = "Please indicate your symptom ";
             let cnt = 0;
@@ -61,11 +62,11 @@ app.post('/sms', async (req, res) => { // respond to text message
                 let severityArray = await getSeverity();
                 responseText = severityArray[Number(reqText)] + lastProgress.replace("symptom", "");
                 console.log("respond with " + responseText);
-                await deleteSurvey(req.body.From);
+                // await deleteSurvey(req.body.From);
             }
             else {
                 const symptoms = await getSymptoms();
-                await updateSurvey(req.body.From, "symptom " + symptoms[Number(reqText)]); // user sent in symptom number, so insert into DB
+                await updateSurvey(req.body.From, "symptom " + symptoms[Number(reqText)], Number(reqText)); // user sent in symptom number, so insert into DB
             }
 
             twiml.message(responseText);
@@ -101,7 +102,7 @@ function testMsg() {
 // *********************************** END TWILIO ***********************************
 
 // *********************************** START MONGODB ***********************************
-async function updateSurvey(phoneNumber, progress) {
+async function updateSurvey(phoneNumber, progress, symptomNumber) {
     try {
       await mongoClient.connect();
       if (progress == "start") {
@@ -112,15 +113,18 @@ async function updateSurvey(phoneNumber, progress) {
         const result = await mongoClient.db("surveys").collection("survey").insertOne(doc);
         if (result) {
             console.log("phone number inserted " + result.insertedId);
-            return result.insertedId;
+            return result;
         }
       } else {
         const result = await mongoClient.db("surveys").collection("survey").updateOne({
-                phoneNumber: phoneNumber
+                phoneNumber: phoneNumber,
+                symptomNumber: symptomNumber
             }, {
                 $push: {progress: progress}
             }
         );
+
+        return result;
       }
       
     } finally {
