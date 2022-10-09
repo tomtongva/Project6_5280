@@ -50,17 +50,15 @@ app.post('/sms', async (req, res) => { // respond to text message
         }
 
 
-        let question = null;
+        let question = "Please indicate your symptom ";
         let cnt = 0;
         for (const symptom of symptoms) {
             question = question + "(" + cnt++ + ")" + symptom + ", ";
         }
+        question = question.substring(0, question.lastIndexOf(','));
 
         if (existingSurvey == null) {
             let result = await updateSurvey(req.body.From, reqText);
-
-            let question = "Please indicate your symptom ";
-            question = question.substring(0, question.lastIndexOf(','));
 
             twiml.message(question);
         } else if (Number.isFinite(Number(reqText)) && (Number(reqText) >= 0) && (Number(reqText) >= cnt)) {            
