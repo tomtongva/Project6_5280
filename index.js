@@ -96,6 +96,7 @@ app.post('/sms', async (req, res) => { // respond to text message
                 }
             }
             else {
+                let completedSymptoms = await getCompletedSymptoms(req.body.From);
                 for (const symptom of completedSymptoms) {
                     removeValueFromArray(symptoms, symptom);
                 }
