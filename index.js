@@ -42,7 +42,7 @@ app.post('/sms', async (req, res) => { // respond to text message
         }
 
         if (existingSurvey == null) { // start a new survey
-            sendSurvey();
+            sendSurvey(req);
         } else if (Number.isFinite(Number(reqText))) {     // user sent a number in their text        
             let lastProgress = existingSurvey.progress[existingSurvey.progress.length - 1];
             let responseText = "On a scale from 0 (none) to 4 (severe), how would you rate your " + existingSurvey.progress[1] +
@@ -63,7 +63,7 @@ app.post('/sms', async (req, res) => { // respond to text message
                 await updateSurvey(req.body.From, "symptom " + symptoms[Number(reqText)] + "," + Number(reqText)); // user sent in symptom number, so insert into DB
             }
 
-            continueOrCompleteSurvey(); // figure out if we need to send more surveys or we stop
+            continueOrCompleteSurvey(req); // figure out if we need to send more surveys or we stop
 
             twiml.message(responseText);
         } else {
@@ -84,6 +84,38 @@ app.get('/', (req, res) => {
 
     res.send("Hello world");
 });
+
+async function sendSurvey(req) {
+    let result = await updateSurvey(req.body.From, reqText);
+
+    let symptoms = await getSymptoms();
+    let completedSymptoms = await getCompletedSymptoms();
+    if (completedSymptoms != null) {
+      for (const symptom of completedSymptoms) {
+        symptoms.remove(symptom);
+      }
+    }
+
+    let question = "Please indicate your symptom ";
+    let cnt = 0;
+    for (const symptom of symptoms) {
+      question = question + "(" + cnt++ + ")" + symptom + ", ";
+    }
+    question = question.substring(0, question.lastIndexOf(","));
+
+    twiml.message(question);
+}
+
+async function continueOrCompleteSurvey(req) {
+    let completedSymptoms = await getCompletedSymptoms();
+    if (completedSymptoms.length == 3) {
+      await deleteSurvey(req.body.From);
+      twilio.message("Thank you and see you soon");
+      return;
+    } else {
+      sendSurvey();
+    }
+}
 
 function testMsg() {
     twilioClient.messages
@@ -233,35 +265,3 @@ app.listen(process.env.PORT || port, () => {
     console.log(`${process.env.PORT}`);
 });
 // *********************************** END ENDPOINT ***********************************
-
-async function sendSurvey() {
-    let result = await updateSurvey(req.body.From, reqText);
-
-    let symptoms = await getSymptoms();
-    let completedSymptoms = await getCompletedSymptoms();
-    if (completedSymptoms != null) {
-      for (const symptom of completedSymptoms) {
-        symptoms.remove(symptom);
-      }
-    }
-
-    let question = "Please indicate your symptom ";
-    let cnt = 0;
-    for (const symptom of symptoms) {
-      question = question + "(" + cnt++ + ")" + symptom + ", ";
-    }
-    question = question.substring(0, question.lastIndexOf(","));
-
-    twiml.message(question);
-}
-
-async function continueOrCompleteSurvey() {
-    let completedSymptoms = await getCompletedSymptoms();
-    if (completedSymptoms.length == 3) {
-      await deleteSurvey(req.body.From);
-      twilio.message("Thank you and see you soon");
-      return;
-    } else {
-      sendSurvey();
-    }
-}
