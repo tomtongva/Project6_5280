@@ -145,8 +145,12 @@ async function updateCompletedSurvey(phoneNumber, symptomNumber) {
                 symptomNumber: symptomNumber
             },
         };
-        const result = await mongoClient.db("surveys").collection("survey").updateOne(filter, updateDoc);
-  
+        const result = await mongoClient.db("surveys").collection("survey").updateOne(f{
+                phoneNumber: phoneNumber,
+            }, {
+                $push: {symptomNumbers: symptomNumber}
+            }
+        );
           return result;
         
       } finally {
