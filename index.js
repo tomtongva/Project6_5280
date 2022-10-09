@@ -48,7 +48,7 @@ app.post('/sms', async (req, res) => { // respond to text message
             let completedSymptoms = await getCompletedSymptoms(req.body.From);
             if (completedSymptoms != null) {
                 for (const symptom of completedSymptoms) {
-                    symptoms.remove(symptom);
+                    removeValueFromArray(symptoms, symptom);
                 }
             }
 
@@ -83,7 +83,7 @@ app.post('/sms', async (req, res) => { // respond to text message
                     console.log("completed symptom survey " + completedSymptoms);
                     console.log("all symptoms " + symptoms);
                     for (const symptom of completedSymptoms) {
-                        symptoms.remove(symptom);
+                        removeValueFromArray(symptoms, symptom);
                     }
         
                     let question = "Please indicate your symptom ";
@@ -112,6 +112,13 @@ app.post('/sms', async (req, res) => { // respond to text message
 
     res.type('text/xml').send(twiml.toString());
 });
+
+function removeValueFromArray(array, value) {
+    var indexOfValue = array.indexOfValue(value);
+    if (indexOfValue !== -1) {
+        array.splice(indexOfValue, 1);
+    }
+}
 
 app.get('/', (req, res) => {
     testMsg();
