@@ -57,13 +57,13 @@ app.post('/sms', async (req, res) => { // respond to text message
                 let symptom = lastProgress;
                 console.log("update user's survey with completed symptom " + symptom);
                 await updateCompletedSurvey(req.body.From, symptom); // keep track of which symptom was completed in the DB
+
+                continueOrCompleteSurvey(req, reqText); // figure out if we need to send more surveys or we stop
             }
             else { // this is the first time we're getting a text from the user after they sent in "START"
                 const symptoms = await getSymptoms();
                 await updateSurvey(req.body.From, "symptom " + symptoms[Number(reqText)] + "," + Number(reqText)); // user sent in symptom number, so insert into DB
             }
-
-            continueOrCompleteSurvey(req); // figure out if we need to send more surveys or we stop
 
             twiml.message(responseText);
         } else {
@@ -107,14 +107,14 @@ async function sendSurvey(req, reqText) {
     twiml.message(question);
 }
 
-async function continueOrCompleteSurvey(req) {
+async function continueOrCompleteSurvey(req, reqText) {
     let completedSymptoms = await getCompletedSymptoms();
     if (completedSymptoms.length == 3) {
       await deleteSurvey(req.body.From);
       twilio.message("Thank you and see you soon");
       return;
     } else {
-      sendSurvey();
+      sendSurvey(req, reqText);
     }
 }
 
