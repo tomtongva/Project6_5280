@@ -120,7 +120,8 @@ app.post('/sms', async (req, res) => { // respond to text message
             if (question != null) twiml.message(question);
 
         } else {
-            twiml.message("Please enter a number from 0 to " + cnt);  
+            twiml.message("Please enter a number from 0 to " + cnt); 
+            twiml.message(question);
         }
     } catch (exception) {
         console.log(exception);
