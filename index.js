@@ -49,6 +49,7 @@ app.post('/sms', async (req, res) => { // respond to text message
             let responseText = "On a scale from 0 (none) to 4 (severe), how would you rate your " + existingSurvey.progress[1] +
                             " in the last 24 hours?";
 
+            console.log("last progress " + lastProgress);
             if (lastProgress.includes("symptom")) { // user already picked a symptom, so this number is the severity
                 let severityArray = await getSeverity();
                 lastProgress = lastProgress.replace("symptom", "").substring(0, lastProgress.lastIndexOf(","));
@@ -61,7 +62,7 @@ app.post('/sms', async (req, res) => { // respond to text message
                 twiml.message(responseText);
                 // res.type('text/xml').send(twiml.toString());
 
-                await continueOrCompleteSurvey(req, reqText, res); // figure out if we need to send more surveys or we stop
+                // await continueOrCompleteSurvey(req, reqText, res); // figure out if we need to send more surveys or we stop
             }
             else { // this is the first time we're getting a text from the user after they sent in "START"
                 const symptoms = await getSymptoms();
