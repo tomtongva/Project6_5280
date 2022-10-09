@@ -71,7 +71,7 @@ app.post('/sms', async (req, res) => { // respond to text message
                 responseText = severityArray[Number(reqText)] + lastProgress.substring(0, lastProgress.lastIndexOf(","));
                 console.log("respond with " + responseText);
 
-                let symptom = lastProgress.substring(lastProgress.lastIndexOf(",") + 1);
+                let symptom = lastProgress.substring(0, lastProgress.lastIndexOf(",");
                 console.log("update user's survey with completed symptom " + symptom);
                 await updateCompletedSurvey(req.body.From, symptom);
                 // await deleteSurvey(req.body.From);
