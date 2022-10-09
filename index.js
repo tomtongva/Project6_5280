@@ -163,7 +163,7 @@ async function getSeverity() {
         var severity = await mongoClient
           .db("surveys")
           .collection("serverity")
-          .find({});
+          .findOne({});
 
         console.log("returning " + severity + " " + severity._id + " " + severity.severity);
         return severity.severity;
