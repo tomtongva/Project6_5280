@@ -78,7 +78,7 @@ app.post('/sms', async (req, res) => { // respond to text message
                 let completedSymptoms = await getCompletedSymptoms(req.body.From);
                 if (completedSymptoms.length >= 3) {
                     await deleteSurvey(req.body.From);
-                    twilio.message("Thank you and see you soon");
+                    twiml.message("Thank you and see you soon");
                 } else {
                     console.log("completed symptom survey " + completedSymptoms);
                     console.log("all symptoms " + symptoms);
@@ -92,6 +92,7 @@ app.post('/sms', async (req, res) => { // respond to text message
                         question = question + "(" + cnt++ + ")" + symptom + ", ";
                     }
                     question = question.substring(0, question.lastIndexOf(','));
+                    twiml.message(question);
                 }
             }
             else {
