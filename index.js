@@ -61,7 +61,7 @@ app.post('/sms', async (req, res) => { // respond to text message
             let result = await updateSurvey(req.body.From, reqText);
 
             twiml.message(question);
-        } else if (Number.isFinite(Number(reqText)) && (Number(reqText) >= 0) && (Number(reqText) >= cnt)) {            
+        } else if (Number.isFinite(Number(reqText)) && (Number(reqText) >= 0) && (Number(reqText) <= cnt)) {            
             let lastProgress = existingSurvey.progress[existingSurvey.progress.length - 1];
             let responseText = null;
             if (lastProgress.includes("symptom")) {
