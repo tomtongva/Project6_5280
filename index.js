@@ -83,6 +83,7 @@ app.post('/sms', async (req, res) => { // respond to text message
                     twiml.message(responseText);
                     responseText = "Thank you and see you soon";
                     twiml.message(responseText);
+                    res.type('text/xml').send(twiml.toString());
                     return;
                 } else {
                     console.log("completed symptom survey " + completedSymptoms);
