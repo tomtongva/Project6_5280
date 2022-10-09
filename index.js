@@ -50,21 +50,20 @@ app.post('/sms', async (req, res) => { // respond to text message
         }
 
 
-        let question = "Please indicate your symptom ";
+        let responseText = "Please indicate your symptom ";
         let cnt = 0;
         for (const symptom of symptoms) {
-            question = question + "(" + cnt++ + ")" + symptom + ", ";
+            responseText = responseText + "(" + cnt++ + ")" + symptom + ", ";
         }
-        question = question.substring(0, question.lastIndexOf(','));
+        responseText = responseText.substring(0, responseText.lastIndexOf(','));
         --cnt;
 
         if (existingSurvey == null) {
             let result = await updateSurvey(req.body.From, reqText);
 
-            twiml.message(question);
+            twiml.message(responseText);
         } else if (Number.isFinite(Number(reqText)) && (Number(reqText) >= 0) && (Number(reqText) <= cnt)) {            
             let lastProgress = existingSurvey.progress[existingSurvey.progress.length - 1];
-            let responseText = null;
             if (lastProgress.includes("symptom")) {
                 let severityArray = await getSeverity();
                 lastProgress = lastProgress.replace("symptom", "");
@@ -107,7 +106,6 @@ app.post('/sms', async (req, res) => { // respond to text message
 
                 if (existingSurvey.progress[1] == "symptom None") {
                     responseText = "Thank you and we will check with you later";
-                    question = null;
                     await deleteSurvey(req.body.From);
                 } else {
                     responseText = "On a scale from 0 (none) to 4 (severe), how would you rate your " + existingSurvey.progress[1].replace("symptom ") +
@@ -116,7 +114,6 @@ app.post('/sms', async (req, res) => { // respond to text message
             }
 
             twiml.message(responseText);
-            if (question != null) twiml.message(question);
 
         } else {
             twiml.message("Please enter a number from 0 to " + cnt);  
