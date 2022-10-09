@@ -55,6 +55,7 @@ app.post('/sms', async (req, res) => { // respond to text message
         } else if (Number.isFinite(Number(reqText))) {            
             await updateSurvey(req.body.From, "symptom " + reqText);
             let lastProgress = existingSurvey.progress.length[existingSurvey.progress.length-1];
+            console.log("last progress " + lastProgress);
             let responseText = "On a scale from 0 (none) to 4 (severe), how would you rate your " + existingSurvey.progress[1] +
                             " in the last 24 hours?";
 
