@@ -87,7 +87,12 @@ app.post('/sms', async (req, res) => { // respond to text message
                     for (const symptom of completedSymptoms) {
                         removeValueFromArray(symptoms, symptom);
                     }
-        
+                    cnt = 0;
+                    for (const symptom of symptoms) {
+                        question = question + "(" + cnt++ + ")" + symptom + ", ";
+                    }
+                    question = question.substring(0, question.lastIndexOf(','));
+                    --cnt;
                     // question = "Please indicate your symptom ";
                     // cnt = 0;
                     // for (const symptom of symptoms) {
