@@ -20,17 +20,15 @@ const twilioClient = new twilio(accountSid, authToken);
 app.use(bodyParser.urlencoded({extended:false}));
 
 // *********************************** START TWILIO ***********************************
+const twiml = new MessagingResponse();
 app.post('/sms', async (req, res) => { // respond to text message
-    const twiml = new MessagingResponse();
     let reqText = req.body.Body.toLowerCase();
     console.log("text from user " + reqText);
 
-    if (reqText == "start")
+    if (reqText == "start") {
         twiml.message('Welcome to the study');
-
-    console.log("send start message back");
-    res.type('text/xml').send(twiml.toString());
-    return;
+        res.type('text/xml').send(twiml.toString());
+    }
 
     try {
         let existingSurvey = await findExistingSurvey(req.body.From, reqText);
@@ -46,7 +44,6 @@ app.post('/sms', async (req, res) => { // respond to text message
 
         if (existingSurvey == null) { // start a new survey
             sendSurvey(req, reqText);
-            return;
         } else if (Number.isFinite(Number(reqText))) {     // user sent a number in their text        
             let lastProgress = existingSurvey.progress[existingSurvey.progress.length - 1];
             let responseText = "On a scale from 0 (none) to 4 (severe), how would you rate your " + existingSurvey.progress[1] +
@@ -109,6 +106,7 @@ async function sendSurvey(req, reqText) {
 
     console.log("sending survey " + question);
     twiml.message(question);
+    res.type('text/xml').send(twiml.toString());
 }
 
 async function continueOrCompleteSurvey(req, reqText) {
