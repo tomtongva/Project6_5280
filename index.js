@@ -72,9 +72,8 @@ app.post('/sms', async (req, res) => { // respond to text message
                 responseText = severityArray[Number(reqText)] + lastProgress;
                 console.log("respond with " + responseText);
 
-                let symptom = lastProgress;
-                console.log("update user's survey with completed symptom " + symptom);
-                await updateCompletedSurvey(req.body.From, symptom);
+                console.log("update user's survey with completed symptom " + lastProgress);
+                await updateCompletedSurvey(req.body.From, lastProgress);
 
                 let completedSymptoms = await getCompletedSymptoms(req.body.From);
                 if (completedSymptoms.length >= 3) {
