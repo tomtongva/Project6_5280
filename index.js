@@ -67,17 +67,17 @@ app.post('/sms', async (req, res) => { // respond to text message
             }
 
             twiml.message(responseText);
+            res.type('text/xml').send(twiml.toString());
         } else {
-            twiml.message("Please enter a number from 0 to 5");  
+            twiml.message("Please enter a number from 0 to 5");
+            res.type('text/xml').send(twiml.toString());
         }
     } catch (exception) {
         console.log(exception);
         twiml.message('Survey unavailable at this time');
+        res.type('text/xml').send(twiml.toString());
         return;
     }
-
-
-    res.type('text/xml').send(twiml.toString());
 });
 
 app.get('/', (req, res) => {
