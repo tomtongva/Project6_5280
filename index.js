@@ -111,7 +111,7 @@ app.post('/sms', async (req, res) => { // respond to text message
                     question = null;
                     await deleteSurvey(req.body.From);
                 } else {
-                    responseText = "On a scale from 0 (none) to 4 (severe), how would you rate your " + existingSurvey.progress[1].replace("symptom ") +
+                    responseText = "On a scale from 0 (none) to 4 (severe), how would you rate your " + existingSurvey.progress[1].replace("symptom ", "") +
                             " in the last 24 hours?";
                     question = null;
                 }
@@ -125,7 +125,7 @@ app.post('/sms', async (req, res) => { // respond to text message
                     question = null;
                     await deleteSurvey(req.body.From);
                 } else {
-                    responseText = "On a scale from 0 (none) to 4 (severe), how would you rate your " + existingSurvey.progress[1].replace("symptom ") +
+                    responseText = "On a scale from 0 (none) to 4 (severe), how would you rate your " + existingSurvey.progress[1].replace("symptom ", "") +
                             " in the last 24 hours?";
                     question = null;
                 }
