@@ -57,6 +57,7 @@ app.post('/sms', async (req, res) => { // respond to text message
             let responseText = "On a scale from 0 (none) to 4 (severe), how would you rate your " + existingSurvey.progress[1] +
                             " in the last 24 hours?";
 
+            console.log("does it contain symptom " + lastProgress.includes("symptom") + " " + !lastProgress.includes("symptom"));
             if (!lastProgress.includes("symptom")) {
                 responseText = "You have a mild xxxx";
                 await deleteSurvey(req.body.From);
