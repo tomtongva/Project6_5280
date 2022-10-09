@@ -58,7 +58,7 @@ app.post('/sms', async (req, res) => { // respond to text message
                 console.log("update user's survey with completed symptom " + symptom);
                 await updateCompletedSurvey(req.body.From, symptom); // keep track of which symptom was completed in the DB
 
-                continueOrCompleteSurvey(req, reqText); // figure out if we need to send more surveys or we stop
+                // continueOrCompleteSurvey(req, reqText); // figure out if we need to send more surveys or we stop
             }
             else { // this is the first time we're getting a text from the user after they sent in "START"
                 const symptoms = await getSymptoms();
