@@ -42,15 +42,15 @@ app.post('/sms', async (req, res) => { // respond to text message
         }
         
         let symptoms = await getSymptoms();
+        let completedSymptoms = await getCompletedSymptoms(req.body.From);
+        if (completedSymptoms != null) {
+          for (const symptom of completedSymptoms) {
+            removeValueFromArray(symptoms, symptom);
+          }
+        }
+
         if (existingSurvey == null) {
             let result = await updateSurvey(req.body.From, reqText);
-
-            let completedSymptoms = await getCompletedSymptoms(req.body.From);
-            if (completedSymptoms != null) {
-                for (const symptom of completedSymptoms) {
-                    removeValueFromArray(symptoms, symptom);
-                }
-            }
 
             let question = "Please indicate your symptom ";
             let cnt = 0;
@@ -60,7 +60,7 @@ app.post('/sms', async (req, res) => { // respond to text message
             question = question.substring(0, question.lastIndexOf(','));
 
             twiml.message(question);
-        } else if (Number.isFinite(Number(reqText))) {            
+        } else if (Number.isFinite(Number(reqText)) && (Number(reqText) >= 0) && (Number(reqText) >= cnt)) {            
             let lastProgress = existingSurvey.progress[existingSurvey.progress.length - 1];
             let responseText = null;
 
@@ -74,7 +74,7 @@ app.post('/sms', async (req, res) => { // respond to text message
                 console.log("update user's survey with completed symptom " + lastProgress);
                 await updateCompletedSurvey(req.body.From, lastProgress);
 
-                let completedSymptoms = await getCompletedSymptoms(req.body.From);
+                // let completedSymptoms = await getCompletedSymptoms(req.body.From);
                 if (completedSymptoms.length >= 3) {
                     await deleteSurvey(req.body.From);
                     twiml.message(responseText);
@@ -96,7 +96,7 @@ app.post('/sms', async (req, res) => { // respond to text message
                 }
             } else {
                 console.log ("compare symptom" + existingSurvey.progress[1] + "-" + (existingSurvey.progress[1] == "symptom None"));
-                let completedSymptoms = await getCompletedSymptoms(req.body.From);
+                // let completedSymptoms = await getCompletedSymptoms(req.body.From);
                 if (completedSymptoms != null) {
                     for (const symptom of completedSymptoms) {
                         removeValueFromArray(symptoms, symptom);
@@ -118,7 +118,7 @@ app.post('/sms', async (req, res) => { // respond to text message
             if (question != null) twiml.message(question);
 
         } else {
-            twiml.message("Please enter a number from 0 to 5");  
+            twiml.message("Please enter a number from 0 to " + cnt);  
         }
     } catch (exception) {
         console.log(exception);
