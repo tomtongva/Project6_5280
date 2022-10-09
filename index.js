@@ -81,6 +81,7 @@ app.post('/sms', async (req, res) => { // respond to text message
                     await deleteSurvey(req.body.From);
                     twiml.message(responseText);
                     responseText = "Thank you and see you soon";
+                    question = null;
                 } else {
                     console.log("completed symptom survey " + completedSymptoms);
                     console.log("all symptoms " + symptoms);
