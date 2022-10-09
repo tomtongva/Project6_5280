@@ -63,7 +63,10 @@ app.post('/sms', async (req, res) => { // respond to text message
                 console.log("respond with " + responseText);
                 await deleteSurvey(req.body.From);
             }
-            else await updateSurvey(req.body.From, "symptom " + reqText); // user sent in symptom number, so insert into DB
+            else {
+                const symptoms = await getSymptoms();
+                await updateSurvey(req.body.From, "symptom " + symptoms[Number(reqText)]); // user sent in symptom number, so insert into DB
+            }
 
             twiml.message(responseText);
         } else {
