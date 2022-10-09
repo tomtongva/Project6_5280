@@ -40,12 +40,12 @@ app.post('/sms', async (req, res) => { // respond to text message
             res.type('text/xml').send(twiml.toString());
             return;
         }
-
+        
+        let symptoms = await getSymptoms();
         if (existingSurvey == null) {
             let result = await updateSurvey(req.body.From, reqText);
 
-            let symptoms = await getSymptoms();
-            let completedSymptoms = await getCompletedSymptoms();
+            let completedSymptoms = await getCompletedSymptoms(req.body.From);
             if (completedSymptoms != null) {
                 for (const symptom of completedSymptoms) {
                     symptoms.remove(symptom);
@@ -74,7 +74,23 @@ app.post('/sms', async (req, res) => { // respond to text message
                 let symptom = lastProgress.substring(0, lastProgress.lastIndexOf(","));
                 console.log("update user's survey with completed symptom " + symptom);
                 await updateCompletedSurvey(req.body.From, symptom);
-                // await deleteSurvey(req.body.From);
+
+                let completedSymptoms = await getCompletedSymptoms(req.body.From);
+                if (completedSymptoms.length >= 3) {
+                    await deleteSurvey(req.body.From);
+                    twilio.message("Thank you and see you soon");
+                } else {
+                        for (const symptom of completedSymptoms) {
+                            symptoms.remove(symptom);
+                        }
+        
+                    let question = "Please indicate your symptom ";
+                    let cnt = 0;
+                    for (const symptom of symptoms) {
+                        question = question + "(" + cnt++ + ")" + symptom + ", ";
+                    }
+                    question = question.substring(0, question.lastIndexOf(','));
+                }
             }
             else {
                 const symptoms = await getSymptoms();
