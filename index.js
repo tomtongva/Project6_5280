@@ -58,6 +58,8 @@ app.post('/sms', async (req, res) => { // respond to text message
                 let symptom = lastProgress;
                 console.log("update user's survey with completed symptom " + symptom);
                 await updateCompletedSurvey(req.body.From, symptom); // keep track of which symptom was completed in the DB
+                twiml.message(responseText);
+                // res.type('text/xml').send(twiml.toString());
 
                 continueOrCompleteSurvey(req, reqText, res); // figure out if we need to send more surveys or we stop
             }
@@ -65,9 +67,6 @@ app.post('/sms', async (req, res) => { // respond to text message
                 const symptoms = await getSymptoms();
                 await updateSurvey(req.body.From, "symptom " + symptoms[Number(reqText)] + "," + Number(reqText)); // user sent in symptom number, so insert into DB
             }
-
-            twiml.message(responseText);
-            res.type('text/xml').send(twiml.toString());
         } else {
             twiml.message("Please enter a number from 0 to 5");
             res.type('text/xml').send(twiml.toString());
@@ -114,6 +113,7 @@ async function continueOrCompleteSurvey(req, reqText, res) {
     if (completedSymptoms.length == 3) {
       await deleteSurvey(req.body.From);
       twilio.message("Thank you and see you soon");
+      res.type('text/xml').send(twiml.toString());
       return;
     } else {
       sendSurvey(req, reqText);
