@@ -103,7 +103,7 @@ app.post('/sms', async (req, res) => { // respond to text message
 
             twiml.message(responseText);
             if (question != null) twiml.message(question);
-            
+
         } else {
             twiml.message("Please enter a number from 0 to 5");  
         }
@@ -185,7 +185,7 @@ async function updateCompletedSurvey(phoneNumber, symptomDescription) {
 
         await mongoClient.db("surveys").collection("survey").updateOne(
             { phoneNumber: phoneNumber},
-            { $pull: { fruits: { $in: [ "symptom " + symptomDescription ] } } }
+            { $pull: { progress: { $in: [ "symptom " + symptomDescription ] } } }
         )
 
         return result;
