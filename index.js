@@ -68,10 +68,10 @@ app.post('/sms', async (req, res) => { // respond to text message
             if (lastProgress.includes("symptom")) {
                 let severityArray = await getSeverity();
                 lastProgress = lastProgress.replace("symptom", "");
-                responseText = severityArray[Number(reqText)] + lastProgress.substring(0, lastProgress.lastIndexOf(","));
+                responseText = severityArray[Number(reqText)] + lastProgress;
                 console.log("respond with " + responseText);
 
-                let symptom = lastProgress.substring(0, lastProgress.lastIndexOf(","));
+                let symptom = lastProgress;
                 console.log("update user's survey with completed symptom " + symptom);
                 await updateCompletedSurvey(req.body.From, symptom);
 
@@ -219,7 +219,7 @@ async function getCompletedSymptoms(phoneNumber) {
           .findOne({phoneNumber: phoneNumber});
 
         if (survey != null)
-            return survey.symptomDescription;
+            return survey.completedSymptomSurvey;
       } finally {
         await mongoClient.close();
       }
