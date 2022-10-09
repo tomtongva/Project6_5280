@@ -60,13 +60,16 @@ app.post('/sms', async (req, res) => { // respond to text message
 
             if (lastProgress.includes("symptom")) {
                 let severityArray = await getSeverity();
-                responseText = severityArray[Number(reqText)] + lastProgress.replace("symptom", "");
+                lastProgress = lastProgress.replace("symptom", "");
+                responseText = severityArray[Number(reqText)] + lastProgress.substring(0, lastProgress.lastIndexOf(","));
                 console.log("respond with " + responseText);
+                let sympQuestionNumber = lastProgress.substring(lastProgress.lastIndexOf(","));
+                console.log("update user's survey with completed symptom " + sympQuestionNumber);
                 // await deleteSurvey(req.body.From);
             }
             else {
                 const symptoms = await getSymptoms();
-                await updateSurvey(req.body.From, "symptom " + symptoms[Number(reqText)], Number(reqText)); // user sent in symptom number, so insert into DB
+                await updateSurvey(req.body.From, "symptom " + symptoms[Number(reqText)] + "," + Number(reqText)); // user sent in symptom number, so insert into DB
             }
 
             twiml.message(responseText);
@@ -116,13 +119,9 @@ async function updateSurvey(phoneNumber, progress, symptomNumber) {
             return result;
         }
       } else {
-        const updateDoc = {
-            $set: {
-                phoneNumber: phoneNumber, 
-                symptomNumber: symptomNumber
-            },
-          };
-        const result = await mongoClient.db("surveys").collection("survey").updateOne(updateDoc, {
+        const result = await mongoClient.db("surveys").collection("survey").updateOne({
+                phoneNumber: phoneNumber,
+            }, {
                 $push: {progress: progress}
             }
         );
