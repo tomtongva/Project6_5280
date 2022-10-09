@@ -44,7 +44,13 @@ app.post('/sms', async (req, res) => { // respond to text message
         if (existingSurvey == null) {
             let result = await updateSurvey(req.body.From, reqText);
             console.log("update result " + result.symptomNumber);
+
             let symptoms = await getSymptoms();
+            let completedSymptoms = await getCompletedSymptoms();
+            for (const symptom of completedSymptoms) {
+                symptoms.remove(symptom);
+            }
+
             let question = "Please indicate your symptom ";
             let cnt = 0;
             for (const symptom of symptoms) {
@@ -64,9 +70,9 @@ app.post('/sms', async (req, res) => { // respond to text message
                 responseText = severityArray[Number(reqText)] + lastProgress.substring(0, lastProgress.lastIndexOf(","));
                 console.log("respond with " + responseText);
 
-                let sympQuestionNumber = lastProgress.substring(lastProgress.lastIndexOf(",") + 1);
-                console.log("update user's survey with completed symptom " + sympQuestionNumber);
-                await updateCompletedSurvey(req.body.From, Number(sympQuestionNumber));
+                let symptom = lastProgress.substring(lastProgress.lastIndexOf(",") + 1);
+                console.log("update user's survey with completed symptom " + symptom);
+                await updateCompletedSurvey(req.body.From, symptom);
                 // await deleteSurvey(req.body.From);
             }
             else {
@@ -136,19 +142,14 @@ async function updateSurvey(phoneNumber, progress) {
     }
 }
 
-async function updateCompletedSurvey(phoneNumber, symptomNumber) {
+async function updateCompletedSurvey(phoneNumber, symptomDescription) {
     try {
         await mongoClient.connect();
-        const filter = { phoneNumber: phoneNumber };
-        const updateDoc = {
-            $set: {
-                symptomNumber: symptomNumber
-            },
-        };
+        
         const result = await mongoClient.db("surveys").collection("survey").updateOne({
                 phoneNumber: phoneNumber,
             }, {
-                $push: {symptomNumbers: symptomNumber}
+                $push: {symptomDescription: symptomDescription}
             }
         );
           return result;
@@ -169,6 +170,22 @@ async function getSymptoms() {
           .findOne({});
 
         return symptoms.symptoms;
+      } finally {
+        await mongoClient.close();
+      }
+}
+
+async function getCompletedSymptoms(phoneNumber) {
+    try {
+        console.log("get user completed symptom surveys");
+        await mongoClient.connect();
+    
+        var survey = await mongoClient
+          .db("surveys")
+          .collection("survey")
+          .findOne({phoneNumber: phoneNumber});
+
+        return survey.symptomNumbers;
       } finally {
         await mongoClient.close();
       }
