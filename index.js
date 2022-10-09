@@ -94,7 +94,7 @@ app.post('/sms', async (req, res) => { // respond to text message
                     question = question.substring(0, question.lastIndexOf(','));
                     
                 }
-            } else if (existingSurvey.progress[1] == 0) {
+            } else if (existingSurvey.progress[1] == "symptom None") {
                     responseText = "Thank you and we will check with you later";
                     await deleteSurvey(req.body.From);
                     twiml.message(responseText);
