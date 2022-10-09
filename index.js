@@ -63,8 +63,10 @@ app.post('/sms', async (req, res) => { // respond to text message
                 lastProgress = lastProgress.replace("symptom", "");
                 responseText = severityArray[Number(reqText)] + lastProgress.substring(0, lastProgress.lastIndexOf(","));
                 console.log("respond with " + responseText);
-                let sympQuestionNumber = lastProgress.substring(lastProgress.lastIndexOf(","));
+
+                let sympQuestionNumber = lastProgress.substring(lastProgress.lastIndexOf(",") + 1);
                 console.log("update user's survey with completed symptom " + sympQuestionNumber);
+                await updateCompletedSurvey(req.body.From, Number(sympQuestionNumber));
                 // await deleteSurvey(req.body.From);
             }
             else {
@@ -105,7 +107,7 @@ function testMsg() {
 // *********************************** END TWILIO ***********************************
 
 // *********************************** START MONGODB ***********************************
-async function updateSurvey(phoneNumber, progress, symptomNumber) {
+async function updateSurvey(phoneNumber, progress) {
     try {
       await mongoClient.connect();
       if (progress == "start") {
@@ -132,6 +134,24 @@ async function updateSurvey(phoneNumber, progress, symptomNumber) {
     } finally {
       await mongoClient.close();
     }
+}
+
+async function updateCompletedSurvey(phoneNumber, symptomNumber) {
+    try {
+        await mongoClient.connect();
+        const filter = { phoneNumber: phoneNumber };
+        const updateDoc = {
+            $set: {
+                symptomNumber: symptomNumber
+            },
+        };
+        const result = await mongoClient.db("surveys").collection("survey").updateOne(filter, updateDoc);
+  
+          return result;
+        
+      } finally {
+        await mongoClient.close();
+      }
 }
 
 async function getSymptoms() {
