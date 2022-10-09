@@ -105,6 +105,7 @@ app.post('/sms', async (req, res) => { // respond to text message
                 await updateSurvey(req.body.From, "symptom " + symptoms[Number(reqText)]); // user sent in symptom number, so insert into DB
                 existingSurvey = await findExistingSurvey(req.body.From, reqText);
 
+                console.log("section 1 existing progress " + existingSurvey.progress[1]);
                 if (existingSurvey.progress[1] == "symptom None") {
                     responseText = "Thank you and we will check with you later";
                     question = null;
@@ -118,6 +119,7 @@ app.post('/sms', async (req, res) => { // respond to text message
                 await updateSurvey(req.body.From, "symptom " + symptoms[Number(reqText)]); // user sent in symptom number, so insert into DB
                 existingSurvey = await findExistingSurvey(req.body.From, reqText);
 
+                console.log("section 2 existing progress " + existingSurvey.progress[1]);
                 if (existingSurvey.progress[1] == "symptom None") {
                     responseText = "Thank you and we will check with you later";
                     question = null;
