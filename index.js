@@ -97,7 +97,7 @@ app.post('/sms', async (req, res) => { // respond to text message
             }
             else {
                 const symptoms = await getSymptoms();
-                await updateSurvey(req.body.From, "symptom " + symptoms[Number(reqText)] + "," + Number(reqText)); // user sent in symptom number, so insert into DB
+                await updateSurvey(req.body.From, "symptom " + symptoms[Number(reqText)]); // user sent in symptom number, so insert into DB
             }
 
             twiml.message(responseText);
@@ -173,13 +173,19 @@ async function updateCompletedSurvey(phoneNumber, symptomDescription) {
     try {
         await mongoClient.connect();
         
-        const result = await mongoClient.db("surveys").collection("survey").updateOne({
+        let result = await mongoClient.db("surveys").collection("survey").updateOne({
                 phoneNumber: phoneNumber,
             }, {
-                $push: {symptomDescription: symptomDescription}
-            }
+                $push: {completedSymptomSurvey: symptomDescription}
+            } 
         );
-          return result;
+
+        // await mongoClient.db("surveys").collection("survey").updateOne(
+        //     { phoneNumber: phoneNumber},
+        //     { $pull: { fruits: { $in: [ symptomDescription ] } } }
+        // )
+
+        return result;
         
       } finally {
         await mongoClient.close();
