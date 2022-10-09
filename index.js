@@ -58,7 +58,7 @@ app.post('/sms', async (req, res) => { // respond to text message
             let responseText = "On a scale from 0 (none) to 4 (severe), how would you rate your " + existingSurvey.progress[1] +
                             " in the last 24 hours?";
 
-            if (!lastProgress.contains("symptom"))
+            if (!lastProgress.includes("symptom"))
                 responseText = "You have a mild xxxx";
 
             twiml.message(responseText);
