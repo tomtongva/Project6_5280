@@ -163,9 +163,9 @@ async function getSeverity(number) {
         var serverity = await mongoClient
           .db("surveys")
           .collection("serverity")
-          .find( { number : { $exists : true } } );
+          .find( {}, { number : 1 } );
 
-        return serverity;
+        return serverity.number;
       } finally {
         await mongoClient.close();
       }
