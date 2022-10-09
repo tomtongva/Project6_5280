@@ -57,9 +57,9 @@ app.post('/sms', async (req, res) => { // respond to text message
             let responseText = "On a scale from 0 (none) to 4 (severe), how would you rate your " + existingSurvey.progress[1] +
                             " in the last 24 hours?";
 
-            console.log("does it contain symptom " + lastProgress.includes("symptom") + " " + !lastProgress.includes("symptom"));
-            if (!lastProgress.includes("symptom")) {
-                responseText = "You have a mild xxxx";
+            if (lastProgress.includes("symptom")) {
+                let responseText = await getSeverity(Number(reqText));
+                responseText = responseText + lastProgress.replace("symptom", "");
                 await deleteSurvey(req.body.From);
             }
             else await updateSurvey(req.body.From, "symptom " + reqText); // user sent in symptom number, so insert into DB
@@ -150,6 +150,21 @@ async function findExistingSurvey(phoneNumber, reqText) {
           .findOne({phoneNumber: phoneNumber});
 
         return survey;
+      } finally {
+        await mongoClient.close();
+      }
+}
+
+async function getSeverity(number) {
+    try {
+        await mongoClient.connect();
+    
+        var serverity = await mongoClient
+          .db("surveys")
+          .collection("serverity")
+          .find( { number : { $exists : true } } );
+
+        return serverity;
       } finally {
         await mongoClient.close();
       }
