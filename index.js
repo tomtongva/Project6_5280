@@ -56,6 +56,7 @@ app.post('/sms', async (req, res) => { // respond to text message
             question = question + "(" + cnt++ + ")" + symptom + ", ";
         }
         question = question.substring(0, question.lastIndexOf(','));
+        --cnt;
 
         if (existingSurvey == null) {
             let result = await updateSurvey(req.body.From, reqText);
@@ -106,6 +107,7 @@ app.post('/sms', async (req, res) => { // respond to text message
 
                 if (existingSurvey.progress[1] == "symptom None") {
                     responseText = "Thank you and we will check with you later";
+                    question = null;
                     await deleteSurvey(req.body.From);
                 } else {
                     responseText = "On a scale from 0 (none) to 4 (severe), how would you rate your " + existingSurvey.progress[1].replace("symptom ") +
