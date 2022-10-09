@@ -43,7 +43,7 @@ app.post('/sms', async (req, res) => { // respond to text message
         }
 
         if (existingSurvey == null) { // start a new survey
-            sendSurvey(req, reqText);
+            sendSurvey(req, reqText, res);
         } else if (Number.isFinite(Number(reqText))) {     // user sent a number in their text        
             let lastProgress = existingSurvey.progress[existingSurvey.progress.length - 1];
             let responseText = "On a scale from 0 (none) to 4 (severe), how would you rate your " + existingSurvey.progress[1] +
@@ -59,7 +59,7 @@ app.post('/sms', async (req, res) => { // respond to text message
                 console.log("update user's survey with completed symptom " + symptom);
                 await updateCompletedSurvey(req.body.From, symptom); // keep track of which symptom was completed in the DB
 
-                // continueOrCompleteSurvey(req, reqText); // figure out if we need to send more surveys or we stop
+                continueOrCompleteSurvey(req, reqText, res); // figure out if we need to send more surveys or we stop
             }
             else { // this is the first time we're getting a text from the user after they sent in "START"
                 const symptoms = await getSymptoms();
@@ -86,7 +86,7 @@ app.get('/', (req, res) => {
     res.send("Hello world");
 });
 
-async function sendSurvey(req, reqText) {
+async function sendSurvey(req, reqText, res) {
     let result = await updateSurvey(req.body.From, reqText);
 
     let symptoms = await getSymptoms();
@@ -109,7 +109,7 @@ async function sendSurvey(req, reqText) {
     res.type('text/xml').send(twiml.toString());
 }
 
-async function continueOrCompleteSurvey(req, reqText) {
+async function continueOrCompleteSurvey(req, reqText, res) {
     let completedSymptoms = await getCompletedSymptoms();
     if (completedSymptoms.length == 3) {
       await deleteSurvey(req.body.From);
