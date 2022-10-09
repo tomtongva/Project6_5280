@@ -147,6 +147,33 @@ app.post('/sms', async (req, res) => { // respond to text message
             if (question != null) twiml.message(question);
 
         } else {
+            if (existingSurvey != null && existingSurvey.progress != null) {
+                let lastProgress = existingSurvey.progress[existingSurvey.progress.length - 1];
+                let responseText = null;
+                if (lastProgress.includes("symptom")) {
+                    let severityArray = await getSeverity();
+                    lastProgress = lastProgress.replace("symptom", "");
+                    responseText = severityArray[Number(reqText)] + lastProgress;
+                    console.log("respond with " + responseText);
+
+                    console.log("update user's survey with completed symptom " + lastProgress);
+                    await updateCompletedSurvey(req.body.From, lastProgress);
+
+                    completedSymptoms = await getCompletedSymptoms(req.body.From);
+            
+                    // let completedSymptoms = await getCompletedSymptoms(req.body.From);
+                    if (completedSymptoms.length >= 3) {
+                        console.log("final respones to user because 3 or more surveys");
+                        await deleteSurvey(req.body.From);
+                        twiml.message(responseText);
+                        responseText = "Thank you and see you soon";
+                        twiml.message(responseText);
+                        res.type('text/xml').send(twiml.toString());
+                        return;
+                    }
+                }
+            }
+
             twiml.message("Please enter a number from 0 to " + cnt);
         }
     } catch (exception) {
