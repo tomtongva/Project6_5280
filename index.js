@@ -117,7 +117,8 @@ async function updateSurvey(phoneNumber, progress, symptomNumber) {
         }
       } else {
         const result = await mongoClient.db("surveys").collection("survey").updateOne({
-                phoneNumber: phoneNumber,
+                phoneNumber: phoneNumber
+            }, {
                 symptomNumber: symptomNumber
             }, {
                 $push: {progress: progress}
