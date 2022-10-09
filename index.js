@@ -165,7 +165,7 @@ async function getSeverity() {
           .collection("serverity")
           .find({});
 
-        console.log("returning " + severity + " " + severity.severity);
+        console.log("returning " + severity + " " + severity._id + " " + severity.severity);
         return severity.severity;
       } finally {
         await mongoClient.close();
