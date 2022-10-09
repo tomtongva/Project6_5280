@@ -114,7 +114,7 @@ app.post('/sms', async (req, res) => { // respond to text message
 });
 
 function removeValueFromArray(array, value) {
-    var indexOfValue = array.indexOfValue(value);
+    var indexOfValue = array.indexOf(value);
     if (indexOfValue !== -1) {
         array.splice(indexOfValue, 1);
     }
