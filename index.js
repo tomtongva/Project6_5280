@@ -41,45 +41,29 @@ app.post('/sms', async (req, res) => { // respond to text message
             return;
         }
 
-        if (existingSurvey == null) {
-            let result = await updateSurvey(req.body.From, reqText);
-
-            let symptoms = await getSymptoms();
-            let completedSymptoms = await getCompletedSymptoms();
-            if (completedSymptoms != null) {
-                for (const symptom of completedSymptoms) {
-                    symptoms.remove(symptom);
-                }
-            }
-
-            let question = "Please indicate your symptom ";
-            let cnt = 0;
-            for (const symptom of symptoms) {
-                question = question + "(" + cnt++ + ")" + symptom + ", ";
-            }
-            question = question.substring(0, question.lastIndexOf(','));
-
-            twiml.message(question);
-        } else if (Number.isFinite(Number(reqText))) {            
+        if (existingSurvey == null) { // start a new survey
+            sendSurvey();
+        } else if (Number.isFinite(Number(reqText))) {     // user sent a number in their text        
             let lastProgress = existingSurvey.progress[existingSurvey.progress.length - 1];
             let responseText = "On a scale from 0 (none) to 4 (severe), how would you rate your " + existingSurvey.progress[1] +
                             " in the last 24 hours?";
 
-            if (lastProgress.includes("symptom")) {
+            if (lastProgress.includes("symptom")) { // user already picked a symptom, so this number is the severity
                 let severityArray = await getSeverity();
-                lastProgress = lastProgress.replace("symptom", "");
-                responseText = severityArray[Number(reqText)] + lastProgress.substring(0, lastProgress.lastIndexOf(","));
+                lastProgress = lastProgress.replace("symptom", "").substring(0, lastProgress.lastIndexOf(","));
+                responseText = severityArray[Number(reqText)] + lastProgress;
                 console.log("respond with " + responseText);
 
-                let symptom = lastProgress.substring(lastProgress.lastIndexOf(",") + 1);
+                let symptom = lastProgress;
                 console.log("update user's survey with completed symptom " + symptom);
-                await updateCompletedSurvey(req.body.From, symptom);
-                // await deleteSurvey(req.body.From);
+                await updateCompletedSurvey(req.body.From, symptom); // keep track of which symptom was completed in the DB
             }
-            else {
+            else { // this is the first time we're getting a text from the user after they sent in "START"
                 const symptoms = await getSymptoms();
                 await updateSurvey(req.body.From, "symptom " + symptoms[Number(reqText)] + "," + Number(reqText)); // user sent in symptom number, so insert into DB
             }
+
+            continueOrCompleteSurvey(); // figure out if we need to send more surveys or we stop
 
             twiml.message(responseText);
         } else {
@@ -143,14 +127,14 @@ async function updateSurvey(phoneNumber, progress) {
     }
 }
 
-async function updateCompletedSurvey(phoneNumber, symptomDescription) {
+async function updateCompletedSurvey(phoneNumber, symptomCompleted) {
     try {
         await mongoClient.connect();
         
         const result = await mongoClient.db("surveys").collection("survey").updateOne({
                 phoneNumber: phoneNumber,
             }, {
-                $push: {symptomDescription: symptomDescription}
+                $push: {symptomCompleted: symptomCompleted}
             }
         );
           return result;
@@ -187,7 +171,7 @@ async function getCompletedSymptoms(phoneNumber) {
           .findOne({phoneNumber: phoneNumber});
 
         if (survey != null)
-            return survey.symptomDescription;
+            return survey.symptomCompleted;
       } finally {
         await mongoClient.close();
       }
@@ -249,3 +233,35 @@ app.listen(process.env.PORT || port, () => {
     console.log(`${process.env.PORT}`);
 });
 // *********************************** END ENDPOINT ***********************************
+
+async function sendSurvey() {
+    let result = await updateSurvey(req.body.From, reqText);
+
+    let symptoms = await getSymptoms();
+    let completedSymptoms = await getCompletedSymptoms();
+    if (completedSymptoms != null) {
+      for (const symptom of completedSymptoms) {
+        symptoms.remove(symptom);
+      }
+    }
+
+    let question = "Please indicate your symptom ";
+    let cnt = 0;
+    for (const symptom of symptoms) {
+      question = question + "(" + cnt++ + ")" + symptom + ", ";
+    }
+    question = question.substring(0, question.lastIndexOf(","));
+
+    twiml.message(question);
+}
+
+async function continueOrCompleteSurvey() {
+    let completedSymptoms = await getCompletedSymptoms();
+    if (completedSymptoms.length == 3) {
+      await deleteSurvey(req.body.From);
+      twilio.message("Thank you and see you soon");
+      return;
+    } else {
+      sendSurvey();
+    }
+}
