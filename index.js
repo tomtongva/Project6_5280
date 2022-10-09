@@ -180,10 +180,10 @@ async function updateCompletedSurvey(phoneNumber, symptomDescription) {
             } 
         );
 
-        // await mongoClient.db("surveys").collection("survey").updateOne(
-        //     { phoneNumber: phoneNumber},
-        //     { $pull: { fruits: { $in: [ symptomDescription ] } } }
-        // )
+        await mongoClient.db("surveys").collection("survey").updateOne(
+            { phoneNumber: phoneNumber},
+            { $pull: { fruits: { $in: [ symptomDescription ] } } }
+        )
 
         return result;
         
