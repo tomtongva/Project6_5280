@@ -32,7 +32,7 @@ async function getRemainingSymptoms(req) {
     return symptoms;
 }
 
-async function determineSurveyQuestions(symptoms) {
+function determineSurveyQuestions(symptoms) {
     let question = "Please indicate your symptom ";
     let cnt = 0;
     for (const symptom of symptoms) {
