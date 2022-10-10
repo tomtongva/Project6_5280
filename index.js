@@ -108,6 +108,7 @@ app.post('/sms', async (req, res) => { // respond to text message
                 let maxSurvey = maxSurveyResult[0];
                 completedSymptoms = maxSurveyResult[1];
                 
+                console.log("completedSymptoms " + maxSurveyResult[1] + " " + maxSurveyResult[0]);
                 if (maxSurvey === true) {
                     return;
                 } else { // send another survey question again since they haven't answer up to 3 questions
