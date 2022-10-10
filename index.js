@@ -88,13 +88,13 @@ app.post('/sms', async (req, res) => { // respond to text message
     let reqText = req.body.Body.toLowerCase();
     console.log("text from user " + reqText);
 
-    if (reqText == "start")
-        twiml.message('Welcome to the study');
-
     try {
         let existingSurvey = await findExistingSurvey(req.body.From, reqText);
 
         console.log("existing survey exists? " + existingSurvey);
+
+        if (existingSurvey == null && reqText == 'start') // send this welcome response only once during study
+            twiml.message('Welcome to the study');
 
         if (existingSurvey == null && reqText !== 'start') {
             twiml.message('The Robots are coming! Head for the hills! ' + req.body.Body + ' ' + req.body.From);
