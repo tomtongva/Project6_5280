@@ -74,12 +74,12 @@ async function sypmtomOptionZero(existingSurvey, req) {
 
 function respondToInvalidSeverityLevel(severityArray, reqText, res, twiml) {
     if (Number.isFinite(Number(reqText)) && (Number(reqText) >= 0) && (Number(reqText) < severityArray.length)) {
+        return false;
+    } else {
         twiml.message("Please enter severity level between 0 and " + (severityArray.length -1 ));
         res.type('text/xml').send(twiml.toString());
         return true;
     }
-
-    return false;
 }
 
 app.post('/sms', async (req, res) => { // respond to text message
@@ -204,7 +204,7 @@ app.post('/sms', async (req, res) => { // respond to text message
                         console.log("user sent incorrect severity level");
                         return;
                     }
-                    
+
                     console.log("respond with " + responseText);
 
                     console.log("update user's survey with completed symptom " + lastProgress);
