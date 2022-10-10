@@ -59,11 +59,13 @@ async function maxSurveyReached(twiml, req, res, responseText) {
 }
 
 async function sypmtomOptionZero(existingSurvey, req) {
+    console.log("user sent " + existingSurvey.progress[1] + " " + (existingSurvey.progress[1] == "symptom None"));
     if (existingSurvey.progress[1] == "symptom None") {
         let responseText = "Thank you and we will check with you later";
         let question = null;
         await deleteSurvey(req.body.From);
 
+        console.log("returning " + responseText);
         return [responseText, question];
     }
 
@@ -84,7 +86,6 @@ app.post('/sms', async (req, res) => { // respond to text message
 
         console.log("existing survey exists? " + existingSurvey);
 
-        
         if (existingSurvey == null && reqText !== 'start') {
             twiml.message('The Robots are coming! Head for the hills! ' + req.body.Body + ' ' + req.body.From);
             res.type('text/xml').send(twiml.toString());
@@ -146,6 +147,7 @@ app.post('/sms', async (req, res) => { // respond to text message
                 console.log("section 1 existing progress " + existingSurvey.progress[1]);
                 let sypmtomOptionZeroResult = sypmtomOptionZero(existingSurvey, req);
                 responseText = sypmtomOptionZeroResult[0];
+                console.log("section 1 responseText for symptom 0 " + responseText);
                 if (responseText != null) {
                     question = null;
                 } else {
@@ -160,6 +162,7 @@ app.post('/sms', async (req, res) => { // respond to text message
                 console.log("section 2 existing progress " + existingSurvey.progress[1]);
                 let sypmtomOptionZeroResult = sypmtomOptionZero(existingSurvey, req);
                 responseText = sypmtomOptionZeroResult[0];
+                console.log("section 2 responseText for symptom 0 " + responseText);
                 if (responseText != null) {
                     question = null;
                 } else {
