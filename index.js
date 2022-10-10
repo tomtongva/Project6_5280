@@ -32,6 +32,18 @@ async function getRemainingSymptoms(req) {
     return symptoms;
 }
 
+async function determineSurveyQuestions(symptoms) {
+    let question = "Please indicate your symptom ";
+    let cnt = 0;
+    for (const symptom of symptoms) {
+      question = question + "(" + cnt++ + ")" + symptom + ", ";
+    }
+    question = question.substring(0, question.lastIndexOf(","));
+    --cnt;
+
+    return[question, cnt];
+}
+
 app.post('/sms', async (req, res) => { // respond to text message
     const twiml = new MessagingResponse();
   
@@ -55,13 +67,9 @@ app.post('/sms', async (req, res) => { // respond to text message
         
         let symptoms = await getRemainingSymptoms(req);
 
-        let question = "Please indicate your symptom ";
-        let cnt = 0;
-        for (const symptom of symptoms) {
-            question = question + "(" + cnt++ + ")" + symptom + ", ";
-        }
-        question = question.substring(0, question.lastIndexOf(','));
-        --cnt;
+        let questionsAndSymptomCount = determineSurveyQuestions(symptoms);
+        let question = questionsAndSymptomCount[0];
+        let cnt = questionsAndSymptomCount[1];
 
         if (existingSurvey == null) {
             let result = await updateSurvey(req.body.From, reqText);
@@ -96,20 +104,9 @@ app.post('/sms', async (req, res) => { // respond to text message
                     for (const symptom of completedSymptoms) {
                         removeValueFromArray(symptoms, symptom);
                     }
-                    cnt = 0;
-                    question = "Please indicate your symptom ";
-                    for (const symptom of symptoms) {
-                        question = question + "(" + cnt++ + ")" + symptom + ", ";
-                    }
-                    question = question.substring(0, question.lastIndexOf(','));
-                    --cnt;
-                    // question = "Please indicate your symptom ";
-                    // cnt = 0;
-                    // for (const symptom of symptoms) {
-                    //     question = question + "(" + cnt++ + ")" + symptom + ", ";
-                    // }
-                    // question = question.substring(0, question.lastIndexOf(','));
-                    
+                    questionsAndSymptomCount = determineSurveyQuestions(symptoms);
+                    question = questionsAndSymptomCount[0];
+                    cnt = questionsAndSymptomCount[1];                    
                 }
             } else if (existingSurvey.progress[1] != null) {
                 console.log ("compare symptom" + existingSurvey.progress[1] + "-" + (existingSurvey.progress[1] == "symptom None"));
