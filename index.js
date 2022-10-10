@@ -44,7 +44,7 @@ function determineSurveyQuestions(symptoms) {
     return[question, cnt];
 }
 
-async function maxSurveyReached(twiml, req, res) {
+async function maxSurveyReached(twiml, req, res, responseText) {
     let completedSymptoms = await getCompletedSymptoms(req.body.From); // get the array of completed symptom surveys from db
     if (completedSymptoms.length >= 3) {
         console.log("final respones to user because 3 or more surveys");
@@ -104,7 +104,7 @@ app.post('/sms', async (req, res) => { // respond to text message
                 console.log("update user's survey with completed symptom " + lastProgress);
                 await updateCompletedSurvey(req.body.From, lastProgress);
         
-                let maxSurveyResult = await maxSurveyReached(twiml, req, res);
+                let maxSurveyResult = await maxSurveyReached(twiml, req, res, responseText);
                 let maxSurvey = maxSurveyResult[0];
                 completedSymptoms = maxSurveyResult[1];
                 
@@ -173,7 +173,7 @@ app.post('/sms', async (req, res) => { // respond to text message
                     console.log("update user's survey with completed symptom " + lastProgress);
                     await updateCompletedSurvey(req.body.From, lastProgress);
 
-                    let maxSurveyResult = await maxSurveyReached(twiml, req, res);
+                    let maxSurveyResult = await maxSurveyReached(twiml, req, res, responseText);
                     let maxSurvey = maxSurveyResult[0];
                     completedSymptoms = maxSurveyResult[1];
                     if (maxSurvey === true) {
