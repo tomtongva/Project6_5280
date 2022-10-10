@@ -58,6 +58,18 @@ async function maxSurveyReached(twiml, req, res, responseText) {
     return [false, completedSymptoms];
 }
 
+async function sypmtomOptionZero(existingSurvey, req) {
+    if (existingSurvey.progress[1] == "symptom None") {
+        let responseText = "Thank you and we will check with you later";
+        let question = null;
+        await deleteSurvey(req.body.From);
+
+        return [responseText, question];
+    }
+
+    return [null, null];
+}
+
 app.post('/sms', async (req, res) => { // respond to text message
     const twiml = new MessagingResponse();
   
@@ -120,9 +132,9 @@ app.post('/sms', async (req, res) => { // respond to text message
                     question = questionsAndSymptomCount[0];
                     cnt = questionsAndSymptomCount[1];                    
                 }
-            } else if (existingSurvey.progress[1] != null) { // the number user sent falls out of remaining symptom bounderies, so it's a severity number
+            } else if (existingSurvey.progress[1] != null) { // user continued symptom survey
                 console.log ("compare symptom" + existingSurvey.progress[1] + "-" + (existingSurvey.progress[1] == "symptom None"));
-                // let completedSymptoms = await getCompletedSymptoms(req.body.From);
+                
                 if (completedSymptoms != null) {
                     for (const symptom of completedSymptoms) {
                         removeValueFromArray(symptoms, symptom);
@@ -132,10 +144,10 @@ app.post('/sms', async (req, res) => { // respond to text message
                 existingSurvey = await findExistingSurvey(req.body.From, reqText);
 
                 console.log("section 1 existing progress " + existingSurvey.progress[1]);
-                if (existingSurvey.progress[1] == "symptom None") {
-                    responseText = "Thank you and we will check with you later";
+                let sypmtomOptionZeroResult = sypmtomOptionZero(existingSurvey, req);
+                responseText = sypmtomOptionZeroResult[0];
+                if (responseText != null) {
                     question = null;
-                    await deleteSurvey(req.body.From);
                 } else {
                     responseText = "On a scale from 0 (none) to 4 (severe), how would you rate your " + existingSurvey.progress[1].replace("symptom ", "") +
                             " in the last 24 hours?";
@@ -146,10 +158,10 @@ app.post('/sms', async (req, res) => { // respond to text message
                 existingSurvey = await findExistingSurvey(req.body.From, reqText);
 
                 console.log("section 2 existing progress " + existingSurvey.progress[1]);
-                if (existingSurvey.progress[1] == "symptom None") {
-                    responseText = "Thank you and we will check with you later";
+                let sypmtomOptionZeroResult = sypmtomOptionZero(existingSurvey, req);
+                responseText = sypmtomOptionZeroResult[0];
+                if (responseText != null) {
                     question = null;
-                    await deleteSurvey(req.body.From);
                 } else {
                     responseText = "On a scale from 0 (none) to 4 (severe), how would you rate your " + existingSurvey.progress[1].replace("symptom ", "") +
                             " in the last 24 hours?";
@@ -160,7 +172,7 @@ app.post('/sms', async (req, res) => { // respond to text message
             twiml.message(responseText);
             if (question != null) twiml.message(question);
 
-        } else {
+        } else { // the number sent from user falls out of the range of symptoms
             if (existingSurvey != null && existingSurvey.progress != null) {
                 let lastProgress = existingSurvey.progress[existingSurvey.progress.length - 1];
                 let responseText = null;
