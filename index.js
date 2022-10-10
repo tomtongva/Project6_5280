@@ -72,6 +72,16 @@ async function sypmtomOptionZero(existingSurvey, req) {
     return [null, null];
 }
 
+function respondToInvalidSeverityLevel(severityArray, reqText, res, twiml) {
+    if (Number.isFinite(Number(reqText)) && (Number(reqText) >= 0) && (Number(reqText) < severityArray.length)) {
+        twiml.message("Please enter severity level between 0 and " + (severityArray.length -1 ));
+        res.type('text/xml').send(twiml.toString());
+        return true;
+    }
+
+    return false;
+}
+
 app.post('/sms', async (req, res) => { // respond to text message
     const twiml = new MessagingResponse();
   
@@ -108,10 +118,16 @@ app.post('/sms', async (req, res) => { // respond to text message
         } else if (Number.isFinite(Number(reqText)) && (Number(reqText) >= 0) && (Number(reqText) <= cnt)) {  // check symptom number bounderies           
             let lastProgress = existingSurvey.progress[existingSurvey.progress.length - 1];
             let responseText = null;
-            if (lastProgress.includes("symptom")) { // make sure this is not a severity number by checking "progress" from db
+            if (lastProgress.includes("symptom")) { // make sure this is a severity number by checking "progress" from db
                 let severityArray = await getSeverity(); // get severity levels from db
                 lastProgress = lastProgress.replace("symptom", "");
                 responseText = severityArray[Number(reqText)] + lastProgress;
+
+                if (respondToInvalidSeverityLevel(severityArray, reqText, res, twiml) == true) {
+                    console.log("user sent incorrect severity level");
+                    return;
+                }
+
                 console.log("respond with " + responseText);
 
                 console.log("update user's survey with completed symptom " + lastProgress);
@@ -183,6 +199,12 @@ app.post('/sms', async (req, res) => { // respond to text message
                     let severityArray = await getSeverity();
                     lastProgress = lastProgress.replace("symptom", "");
                     responseText = severityArray[Number(reqText)] + lastProgress;
+
+                    if (respondToInvalidSeverityLevel(severityArray, reqText, res, twiml) == true) {
+                        console.log("user sent incorrect severity level");
+                        return;
+                    }
+                    
                     console.log("respond with " + responseText);
 
                     console.log("update user's survey with completed symptom " + lastProgress);
