@@ -20,7 +20,7 @@ const twilioClient = new twilio(accountSid, authToken);
 app.use(bodyParser.urlencoded({extended:false}));
 
 // *********************************** START TWILIO ***********************************
-async function getRemainingSymptoms() {
+async function getRemainingSymptoms(req) {
     let symptoms = await getAllSymptomsFromDB();
     let completedSymptoms = await getCompletedSymptoms(req.body.From);
     if (completedSymptoms != null) {
@@ -53,7 +53,7 @@ app.post('/sms', async (req, res) => { // respond to text message
             return;
         }
         
-        let symptoms = await getRemainingSymptoms();
+        let symptoms = await getRemainingSymptoms(req);
 
         let question = "Please indicate your symptom ";
         let cnt = 0;
