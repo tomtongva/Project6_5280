@@ -29,7 +29,7 @@ async function getRemainingSymptoms(req) {
       }
     }
 
-    return symptoms;
+    return [symptoms, completedSymptoms];
 }
 
 function determineSurveyQuestions(symptoms) {
@@ -65,7 +65,9 @@ app.post('/sms', async (req, res) => { // respond to text message
             return;
         }
         
-        let symptoms = await getRemainingSymptoms(req);
+        let allSymptomsAndCompletedSymptoms = await getRemainingSymptoms(req);
+        let symptoms = allSymptomsAndCompletedSymptoms[0];
+        let completedSymptoms = allSymptomsAndCompletedSymptoms[1];
 
         let questionsAndSymptomCount = determineSurveyQuestions(symptoms);
         let question = questionsAndSymptomCount[0];
@@ -76,11 +78,11 @@ app.post('/sms', async (req, res) => { // respond to text message
             let result = await updateSurvey(req.body.From, reqText);
 
             twiml.message(question);
-        } else if (Number.isFinite(Number(reqText)) && (Number(reqText) >= 0) && (Number(reqText) <= cnt)) {            
+        } else if (Number.isFinite(Number(reqText)) && (Number(reqText) >= 0) && (Number(reqText) <= cnt)) {  // check symptom number bounderies           
             let lastProgress = existingSurvey.progress[existingSurvey.progress.length - 1];
             let responseText = null;
-            if (lastProgress.includes("symptom")) {
-                let severityArray = await getSeverity();
+            if (lastProgress.includes("symptom")) { // make sure this is not a severity number by checking "progress" from db
+                let severityArray = await getSeverity(); // get severity levels from db
                 lastProgress = lastProgress.replace("symptom", "");
                 responseText = severityArray[Number(reqText)] + lastProgress;
                 console.log("respond with " + responseText);
@@ -88,7 +90,7 @@ app.post('/sms', async (req, res) => { // respond to text message
                 console.log("update user's survey with completed symptom " + lastProgress);
                 await updateCompletedSurvey(req.body.From, lastProgress);
 
-                completedSymptoms = await getCompletedSymptoms(req.body.From);
+                completedSymptoms = await getCompletedSymptoms(req.body.From); // get the array of completed symptom surveys from db
         
                 // let completedSymptoms = await getCompletedSymptoms(req.body.From);
                 if (completedSymptoms.length >= 3) {
@@ -99,7 +101,7 @@ app.post('/sms', async (req, res) => { // respond to text message
                     twiml.message(responseText);
                     res.type('text/xml').send(twiml.toString());
                     return;
-                } else {
+                } else { // send another survey question again since they haven't answer up to 3 questions
                     console.log("completed symptom survey " + completedSymptoms);
                     console.log("all symptoms " + symptoms);
                     for (const symptom of completedSymptoms) {
@@ -109,7 +111,7 @@ app.post('/sms', async (req, res) => { // respond to text message
                     question = questionsAndSymptomCount[0];
                     cnt = questionsAndSymptomCount[1];                    
                 }
-            } else if (existingSurvey.progress[1] != null) {
+            } else if (existingSurvey.progress[1] != null) { // the number user sent falls out of remaining symptom bounderies, so it's a severity number
                 console.log ("compare symptom" + existingSurvey.progress[1] + "-" + (existingSurvey.progress[1] == "symptom None"));
                 // let completedSymptoms = await getCompletedSymptoms(req.body.From);
                 if (completedSymptoms != null) {
