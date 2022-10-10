@@ -20,6 +20,18 @@ const twilioClient = new twilio(accountSid, authToken);
 app.use(bodyParser.urlencoded({extended:false}));
 
 // *********************************** START TWILIO ***********************************
+async function getRemainingSymptoms() {
+    let symptoms = await getAllSymptomsFromDB();
+    let completedSymptoms = await getCompletedSymptoms(req.body.From);
+    if (completedSymptoms != null) {
+      for (const symptom of completedSymptoms) {
+        removeValueFromArray(symptoms, symptom);
+      }
+    }
+
+    return symptoms;
+}
+
 app.post('/sms', async (req, res) => { // respond to text message
     const twiml = new MessagingResponse();
   
@@ -41,14 +53,7 @@ app.post('/sms', async (req, res) => { // respond to text message
             return;
         }
         
-        let symptoms = await getSymptoms();
-        let completedSymptoms = await getCompletedSymptoms(req.body.From);
-        if (completedSymptoms != null) {
-          for (const symptom of completedSymptoms) {
-            removeValueFromArray(symptoms, symptom);
-          }
-        }
-
+        let symptoms = await getRemainingSymptoms();
 
         let question = "Please indicate your symptom ";
         let cnt = 0;
@@ -265,7 +270,7 @@ async function updateCompletedSurvey(phoneNumber, symptomDescription) {
       }
 }
 
-async function getSymptoms() {
+async function getAllSymptomsFromDB() {
     try {
         console.log("getting all symptoms");
         await mongoClient.connect();
