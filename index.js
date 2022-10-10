@@ -44,6 +44,20 @@ function determineSurveyQuestions(symptoms) {
     return[question, cnt];
 }
 
+async function maxSurveyReached(twiml, req, res) {
+    let completedSymptoms = await getCompletedSymptoms(req.body.From); // get the array of completed symptom surveys from db
+    if (completedSymptoms.length >= 3) {
+        console.log("final respones to user because 3 or more surveys");
+        await deleteSurvey(req.body.From);
+        twiml.message(responseText);
+        twiml.message("Thank you and see you soon");
+        res.type('text/xml').send(twiml.toString());
+        return true;
+    }
+
+    return false;
+}
+
 app.post('/sms', async (req, res) => { // respond to text message
     const twiml = new MessagingResponse();
   
@@ -89,17 +103,9 @@ app.post('/sms', async (req, res) => { // respond to text message
 
                 console.log("update user's survey with completed symptom " + lastProgress);
                 await updateCompletedSurvey(req.body.From, lastProgress);
-
-                completedSymptoms = await getCompletedSymptoms(req.body.From); // get the array of completed symptom surveys from db
         
-                // let completedSymptoms = await getCompletedSymptoms(req.body.From);
-                if (completedSymptoms.length >= 3) {
-                    console.log("final respones to user because 3 or more surveys");
-                    await deleteSurvey(req.body.From);
-                    twiml.message(responseText);
-                    responseText = "Thank you and see you soon";
-                    twiml.message(responseText);
-                    res.type('text/xml').send(twiml.toString());
+                let maxSurvey = await maxSurveyReached(twiml, req, res);
+                if (maxSurvey === true) {
                     return;
                 } else { // send another survey question again since they haven't answer up to 3 questions
                     console.log("completed symptom survey " + completedSymptoms);
@@ -164,16 +170,8 @@ app.post('/sms', async (req, res) => { // respond to text message
                     console.log("update user's survey with completed symptom " + lastProgress);
                     await updateCompletedSurvey(req.body.From, lastProgress);
 
-                    completedSymptoms = await getCompletedSymptoms(req.body.From);
-            
-                    // let completedSymptoms = await getCompletedSymptoms(req.body.From);
-                    if (completedSymptoms.length >= 3) {
-                        console.log("final respones to user because 3 or more surveys");
-                        await deleteSurvey(req.body.From);
-                        twiml.message(responseText);
-                        responseText = "Thank you and see you soon";
-                        twiml.message(responseText);
-                        res.type('text/xml').send(twiml.toString());
+                    let maxSurvey = await maxSurveyReached(twiml, req, res);
+                    if (maxSurvey === true) {
                         return;
                     }
                 }
