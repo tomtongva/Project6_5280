@@ -52,7 +52,7 @@ async function maxSurveyReached(twiml, req, res) {
         twiml.message(responseText);
         twiml.message("Thank you and see you soon");
         res.type('text/xml').send(twiml.toString());
-        return true;
+        return [true, completedSymptoms];
     }
 
     return false;
@@ -104,7 +104,10 @@ app.post('/sms', async (req, res) => { // respond to text message
                 console.log("update user's survey with completed symptom " + lastProgress);
                 await updateCompletedSurvey(req.body.From, lastProgress);
         
-                let maxSurvey = await maxSurveyReached(twiml, req, res);
+                let maxSurveyResult = await maxSurveyReached(twiml, req, res);
+                let maxSurvey = maxSurveyResult[0];
+                completedSymptoms = maxSurveyResult[1];
+                
                 if (maxSurvey === true) {
                     return;
                 } else { // send another survey question again since they haven't answer up to 3 questions
@@ -170,7 +173,9 @@ app.post('/sms', async (req, res) => { // respond to text message
                     console.log("update user's survey with completed symptom " + lastProgress);
                     await updateCompletedSurvey(req.body.From, lastProgress);
 
-                    let maxSurvey = await maxSurveyReached(twiml, req, res);
+                    let maxSurveyResult = await maxSurveyReached(twiml, req, res);
+                    let maxSurvey = maxSurveyResult[0];
+                    completedSymptoms = maxSurveyResult[1];
                     if (maxSurvey === true) {
                         return;
                     }
