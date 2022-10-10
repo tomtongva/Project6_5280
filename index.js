@@ -70,8 +70,9 @@ app.post('/sms', async (req, res) => { // respond to text message
         let questionsAndSymptomCount = determineSurveyQuestions(symptoms);
         let question = questionsAndSymptomCount[0];
         let cnt = questionsAndSymptomCount[1];
+        console.log("remaining question " + question + " " + cnt);
 
-        if (existingSurvey == null) {
+        if (existingSurvey == null) { // user sent START, so insert phone number into DB
             let result = await updateSurvey(req.body.From, reqText);
 
             twiml.message(question);
