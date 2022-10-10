@@ -145,7 +145,7 @@ app.post('/sms', async (req, res) => { // respond to text message
                 existingSurvey = await findExistingSurvey(req.body.From, reqText);
 
                 console.log("section 1 existing progress " + existingSurvey.progress[1]);
-                let sypmtomOptionZeroResult = sypmtomOptionZero(existingSurvey, req);
+                let sypmtomOptionZeroResult = await sypmtomOptionZero(existingSurvey, req);
                 responseText = sypmtomOptionZeroResult[0];
                 console.log("section 1 responseText for symptom 0 " + responseText);
                 if (responseText != null) {
@@ -160,7 +160,7 @@ app.post('/sms', async (req, res) => { // respond to text message
                 existingSurvey = await findExistingSurvey(req.body.From, reqText);
 
                 console.log("section 2 existing progress " + existingSurvey.progress[1]);
-                let sypmtomOptionZeroResult = sypmtomOptionZero(existingSurvey, req);
+                let sypmtomOptionZeroResult = await sypmtomOptionZero(existingSurvey, req);
                 responseText = sypmtomOptionZeroResult[0];
                 console.log("section 2 responseText for symptom 0 " + responseText);
                 if (responseText != null) {
