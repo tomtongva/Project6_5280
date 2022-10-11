@@ -372,14 +372,12 @@ async function endSurvey(phoneNumber, symptomDescription) {
                 phoneNumber: phoneNumber
             }, {
                 $push: {completedSymptomSurvey: symptomDescription}
-            }, {
-                $set: {progress: ['END']}   
             }
         );
 
         await mongoClient.db("surveys").collection("survey").updateOne(
             { phoneNumber: phoneNumber},
-            { $pull: { progress: { $in: [ "symptom " + symptomDescription ] } } }
+            { $set: { progress: [ "END" ] } }
         )
 
         return result;
