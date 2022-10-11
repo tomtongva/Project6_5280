@@ -99,6 +99,9 @@ app.post('/sms', async (req, res) => { // respond to text message
         if (existingSurvey == null && reqText == 'start') // send this welcome response only once during study
             twiml.message('Welcome to the study');
 
+        if (existingSurvey == null && existingSurvey.progress != null && existingSurvey.progress[1] == 'END'
+            && reqText == 'start') // survive ended through symptom option 0 or max number of symptoms
+
         if (existingSurvey == null && reqText !== 'start') {
             twiml.message('The Robots are coming! Head for the hills! ' + req.body.Body + ' ' + req.body.From);
             res.type('text/xml').send(twiml.toString());
