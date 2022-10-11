@@ -99,8 +99,7 @@ app.post('/sms', async (req, res) => { // respond to text message
         if (existingSurvey == null && reqText == 'start') // send this welcome response only once during study
             twiml.message('Welcome to the study');
 
-        if (existingSurvey != null && existingSurvey.progress != null && existingSurvey.progress[0] == 'END'
-                && reqText == 'start') { // survey already ended through symptom option 0 or max number of symptoms
+        if (existingSurvey != null && existingSurvey.progress != null && existingSurvey.progress[0] == 'END') { // survey already ended through symptom option 0 or max number of symptoms
             twiml.message('Please wait for the next survey');
             res.type('text/xml').send(twiml.toString());
             return;
