@@ -48,8 +48,9 @@ async function maxSurveyReached(twiml, req, res, responseText) {
     let completedSymptoms = await getCompletedSymptoms(req.body.From); // get the array of completed symptom surveys from db
     if (completedSymptoms.length >= 3) {
         console.log("final respones to user because 3 or more surveys");
-        await deleteSurvey(req.body.From);
+        // await deleteSurvey(req.body.From);
         twiml.message(responseText);
+        res.type('text/xml').send(twiml.toString());
         twiml.message("Thank you and see you soon");
         res.type('text/xml').send(twiml.toString());
         return [true, completedSymptoms];
@@ -63,7 +64,7 @@ async function sypmtomOptionZero(existingSurvey, req) {
     if (existingSurvey.progress[1] == "symptom None") {
         let responseText = "Thank you and we will check with you later";
         let question = null;
-        await deleteSurvey(req.body.From);
+        // await deleteSurvey(req.body.From);
 
         console.log("returning " + responseText);
         return [responseText, question];
@@ -238,10 +239,32 @@ function removeValueFromArray(array, value) {
     }
 }
 
-app.get('/', (req, res) => {
-    testMsg();
+function generateLoginPage() {
+    let responseMsg = "<form action='#' method='post'> <br />";
+    responseMsg += "User name: <input type='text' id='userName' name='userName' /> <br />";
+    responseMsg += "Password: <input type='password' name='password' /> <br />";
+    responseMsg += "<input type='Submit' />";
+    responseMsg += "</form>";
 
-    res.send("Hello world");
+    return responseMsg;
+}
+
+app.get('/', (req, res) => {
+    res.send(generateLoginPage());
+});
+
+// Parse URL-encoded bodies (as sent by HTML forms)
+app.use(express.urlencoded());
+
+// Parse JSON bodies (as sent by API clients)
+app.use(express.json());
+
+app.post("/", (req, res) => {
+    console.log(req.body.userName + " " + req.body.password);
+    if (req.body != null && req.body.userName == "admin" && req.body.password=="password") 
+        res.send(findCurrentSurveys());
+    else
+        res.send(generateLoginPage());
 });
 
 function testMsg() {
@@ -257,6 +280,32 @@ function testMsg() {
 // *********************************** END TWILIO ***********************************
 
 // *********************************** START MONGODB ***********************************
+async function findCurrentSurveys() {
+    try {
+        console.log("connect to db");
+        await mongoClient.connect();
+        
+        console.log("get surveys");
+        let cursor = await mongoClient
+            .db("surveys")
+            .collection("symptoms")
+            .find();;
+
+        let retSurveys = "";
+        cursor.forEach(function(err, item) {
+            console.log(item);
+            if(item == null) {
+                mongoClient.close();
+                return retSurveys;
+            }
+            retSurveys += item.phoneNumber;
+        });
+        
+      } finally {
+        await mongoClient.close();
+      }
+}
+
 async function updateSurvey(phoneNumber, progress) {
     try {
       await mongoClient.connect();
