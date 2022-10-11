@@ -50,8 +50,10 @@ async function maxSurveyReached(twiml, req, res, responseText) {
         console.log("final respones to user because 3 or more surveys");
         // await deleteSurvey(req.body.From);
         twiml.message(responseText);
-        res.type('text/xml').send(twiml.toString());
-        twiml.message("Thank you and see you soon");
+        console.log(responseText);
+        responseText = "Thank you and see you soon";
+        twiml.message(responseText);
+        console.log(responseText);
         res.type('text/xml').send(twiml.toString());
         return [true, completedSymptoms];
     }
