@@ -48,7 +48,7 @@ async function maxSurveyReached(twiml, req, res, responseText) {
     let completedSymptoms = await getCompletedSymptoms(req.body.From); // get the array of completed symptom surveys from db
     if (completedSymptoms.length >= 3) {
         console.log("final respones to user because 3 or more surveys");
-        // await deleteSurvey(req.body.From);
+        await endSurvey(req.body.From, "completed 3 symptoms");
         twiml.message(responseText);
         console.log(responseText);
         responseText = "Thank you and see you soon";
@@ -66,7 +66,7 @@ async function sypmtomOptionZero(existingSurvey, req) {
     if (existingSurvey.progress[1] == "symptom None") {
         let responseText = "Thank you and we will check with you later";
         let question = null;
-        // await deleteSurvey(req.body.From);
+        await endSurvey(req.body.From, existingSurvey.progress[1]);
 
         console.log("returning " + responseText);
         return [responseText, question];
@@ -345,10 +345,36 @@ async function updateCompletedSurvey(phoneNumber, symptomDescription) {
         await mongoClient.connect();
         
         let result = await mongoClient.db("surveys").collection("survey").updateOne({
-                phoneNumber: phoneNumber,
+                phoneNumber: phoneNumber
             }, {
                 $push: {completedSymptomSurvey: symptomDescription}
-            } 
+            }
+        );
+
+        await mongoClient.db("surveys").collection("survey").updateOne(
+            { phoneNumber: phoneNumber},
+            { $pull: { progress: { $in: [ "symptom " + symptomDescription ] } } }
+        )
+
+        return result;
+        
+      } finally {
+        await mongoClient.close();
+      }
+}
+
+async function endSurvey(phoneNumber, symptomDescription) {
+    symptomDescription = symptomDescription.trim();
+    try {
+        await mongoClient.connect();
+        
+        let result = await mongoClient.db("surveys").collection("survey").updateOne({
+                phoneNumber: phoneNumber
+            }, {
+                $push: {completedSymptomSurvey: symptomDescription}
+            }, {
+                $set: {progress: ['END']}   
+            }
         );
 
         await mongoClient.db("surveys").collection("survey").updateOne(
