@@ -7,7 +7,7 @@ const app = express();
 const bodyParser = require('body-parser');
 const port = 80;
 
-const { MongoClient } = require("mongodb");
+const { MongoClient, Timestamp } = require("mongodb");
 const uri ="mongodb+srv://group35280:uncc2022@cluster0.rts9eht.mongodb.net/test";
 const mongoClient = new MongoClient(uri);
 
@@ -315,6 +315,7 @@ async function updateSurvey(phoneNumber, progress) {
       if (progress == "start") {
         const doc = {
             phoneNumber: phoneNumber,
+            surveyStarted: new Timestamp(),
             progress: ['START']
         };
         const result = await mongoClient.db("surveys").collection("survey").insertOne(doc);
