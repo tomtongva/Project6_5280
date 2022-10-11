@@ -236,7 +236,8 @@ app.post('/sms', async (req, res) => { // respond to text message
 
 function removeValueFromArray(array, value) {
     var indexOfValue = array.indexOf(value);
-    if ((indexOfValue !== -1) && value !== "symptom None") {
+    console.log("remove " + value + "?" + (value !== "symptom None"));
+    if ((indexOfValue !== -1) && (value !== "symptom None")) {
         array.splice(indexOfValue, 1);
     }
 }
