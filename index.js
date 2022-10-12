@@ -253,8 +253,9 @@ app.get('/', (req, res) => {
     res.render('login');
 });
 
-app.get('/', (req, res) => {
-    res.render('login');
+app.get('/participants', (req, res) => {
+    let participants = [1,2,3,4,5];
+    res.render('participants', {participants});
 });
 
 // Parse URL-encoded bodies (as sent by HTML forms)
