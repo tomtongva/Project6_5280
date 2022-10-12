@@ -2,6 +2,8 @@ const twilio = require('twilio');
 const { MessagingResponse } = require('twilio').twiml; // respond to text message
 const { TaskQueueRealTimeStatisticsPage } = require('twilio/lib/rest/taskrouter/v1/workspace/taskQueue/taskQueueRealTimeStatistics');
 const cookieParser = require('cookie-parser');
+const cookie = require('cookie');
+
 
 
 const jwt = require("jsonwebtoken");
@@ -19,6 +21,8 @@ const app = express();
 const bodyParser = require('body-parser');
 const port = 80;
 var testParticipants = require('./participants.json');
+app.use(bodyParser.json())
+
 
 
 const { MongoClient, Timestamp } = require("mongodb");
@@ -34,6 +38,7 @@ const twilioClient = new twilio(accountSid, authToken);
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({extended:false}));
 app.use(cookieParser());
+app.use(express.static('public'))
 
 // *********************************** START TWILIO ***********************************
 async function getRemainingSymptoms(req) {
@@ -277,21 +282,40 @@ const jwtValidateUserMiddleware = (req, res, next) => {
         req.decodedToken = decoded;
         next();
       } catch (err) {
-        res.status(401).send({ error: "Invalid token", fullError: err });
+        res.redirect('/');
       }
     } else {
     //   res.status(401).send({ error: "Token is required" });
     }
   };
 
-app.get('/', (req, res) => {
+  const jwtValidateNotLoggedIn = (req, res, next) => {
+  
+    let token = req.cookies[headerTokenKey];
+    if(token === undefined) {
+        next()
+    }
+    
+    if (token) {
+      try {
+        let decoded = jwt.verify(token, secrets.JWT_SECRET);
+        req.decodedToken = decoded;
+        res.redirect('participants');
+      } catch (err) {
+        next();
+      }
+    } else {
+    //   res.status(401).send({ error: "Token is required" });
+    }
+  };
+
+app.get('/', jwtValidateNotLoggedIn, (req, res) => {
 
     res.render('login');
 });
 
 app.post('/login', async (req, res) => {
-    console.log(req.body.username)
-    console.log(req.body.username)
+
 
     if(req.body.username == secrets.ADMIN_USERNAME && req.body.password == secrets.ADMIN_PASSWORD) {
         let token = jwt.sign(
@@ -301,21 +325,85 @@ app.post('/login', async (req, res) => {
             },
             secrets.JWT_SECRET
           );
-        console.log(headerTokenKey)
-        console.log(token)
-        res.cookie(headerTokenKey, token, {maxAge: 3600, httpOnly:true, secure: true}).send()
+        
+        const serialized = cookie.serialize(headerTokenKey, token, {
+            secure: true,
+            httpOnly: true
+          });
+        res.setHeader('Set-Cookie', serialized)
+        return res.redirect('participants');
     } else {
-        return res.redirect('/');
+        return res.status(401).send();
     }
 });
 
+app.post('/logout', (req, res) => {
+    res.clearCookie(headerTokenKey)
+    return res.redirect('/');
+});
 
+app.get('/setcookie', (req, res) => {
+    res.cookie(`Cookie token name`,`encrypted cookie string Value`);
+    res.send('Cookie have been saved successfully');
+});
 
-app.get('/participants', jwtValidateUserMiddleware, (req, res) => {
-    let participants = testParticipants;
+app.get('/participants', jwtValidateUserMiddleware, async (req, res) => {
+    // let participants = testParticipants;
+
+    let participants = await getParticipants();
+
+    
     res.render('participants', {participants});
 });
 
+async function getParticipants() {
+    var participants = [];
+    try {
+        await mongoClient.connect();
+        var participantSurveys = await mongoClient
+          .db("surveys")
+          .collection("survey")
+          .find({})
+        await participantSurveys.forEach(survey => {
+            let participant =     {
+                _id : survey._id,
+                phoneNumber : survey.phoneNumber,
+                symptoms : [],
+                dateEnrolled : new Date(Timestamp(survey.surveyStarted).getHighBits() * 1000)
+            }
+            if(survey.progress[0] == 'END') {
+                participant.completionStatus = true;
+            } else {
+                participant.completionStatus = false;
+            }
+            survey.completedSymptomSurvey.forEach((completedSymptom, index) => {
+                if(
+                    completedSymptom == 'Sadness' ||
+                    completedSymptom == 'Headache' ||
+                    completedSymptom == 'Dizziness' ||
+                    completedSymptom == 'Nausea' ||
+                    completedSymptom == 'Fatigue'
+                ){
+                    let symptom = {
+                        symptom : completedSymptom,
+                        severity : null
+                    }
+                    console.log()
+                    if(survey.severity && survey.severity[index]) {
+                        symptom.severity = survey.severity[index]
+                    }
+                    participant.symptoms.push(symptom)
+                }
+            });
+            participants.push(participant)
+        })
+
+      } finally {
+        return participants;
+
+        await mongoClient.close();
+      }
+}
 
 // Parse URL-encoded bodies (as sent by HTML forms)
 app.use(express.urlencoded());
