@@ -1,13 +1,29 @@
-const twilio = require("twilio");
-const { MessagingResponse } = require("twilio").twiml; // respond to text message
-const {
-  TaskQueueRealTimeStatisticsPage,
-} = require("twilio/lib/rest/taskrouter/v1/workspace/taskQueue/taskQueueRealTimeStatistics");
+const twilio = require('twilio');
+const { MessagingResponse } = require('twilio').twiml; // respond to text message
+const { TaskQueueRealTimeStatisticsPage } = require('twilio/lib/rest/taskrouter/v1/workspace/taskQueue/taskQueueRealTimeStatistics');
+const cookieParser = require('cookie-parser');
+const cookie = require('cookie');
+
+
+
+const jwt = require("jsonwebtoken");
+const headerTokenKey = "x-jwt-token";
+
+//In a production system, these would be stored somewhere safe, like a vault or secrets manager
+const secrets = {
+    ADMIN_USERNAME : 'admin',
+    ADMIN_PASSWORD : 'password', 
+    JWT_SECRET : 'Group3KeyForJWT'
+}
 
 const express = require("express");
 const app = express();
 const bodyParser = require("body-parser");
 const port = 80;
+var testParticipants = require('./participants.json');
+app.use(bodyParser.json())
+
+
 
 const { MongoClient, Timestamp } = require("mongodb");
 const uri =
@@ -19,7 +35,10 @@ const authToken = "7148510de1995ea197ebc2ef68fa06df"; // Your Auth Token from ww
 
 const twilioClient = new twilio(accountSid, authToken);
 
-app.use(bodyParser.urlencoded({ extended: false }));
+app.set('view engine', 'ejs');
+app.use(bodyParser.urlencoded({extended:false}));
+app.use(cookieParser());
+app.use(express.static('public'))
 
 // *********************************** START TWILIO ***********************************
 async function getRemainingSymptoms(req) {
@@ -329,20 +348,141 @@ function removeValueFromArray(array, value) {
   }
 }
 
-function generateLoginPage() {
-  let responseMsg = "<form action='#' method='post'> <br />";
-  responseMsg +=
-    "User name: <input type='text' id='userName' name='userName' /> <br />";
-  responseMsg += "Password: <input type='password' name='password' /> <br />";
-  responseMsg += "<input type='Submit' />";
-  responseMsg += "</form>";
+const jwtValidateUserMiddleware = (req, res, next) => {
+  
+    let token = req.cookies[headerTokenKey];
+    if(token === undefined) {
+        res.status(401).redirect('/');
+    }
+    
+    if (token) {
+      try {
+        let decoded = jwt.verify(token, secrets.JWT_SECRET);
+        req.decodedToken = decoded;
+        next();
+      } catch (err) {
+        res.redirect('/');
+      }
+    } else {
+    //   res.status(401).send({ error: "Token is required" });
+    }
+  };
 
-  return responseMsg;
-}
+  const jwtValidateNotLoggedIn = (req, res, next) => {
+  
+    let token = req.cookies[headerTokenKey];
+    if(token === undefined) {
+        next()
+    }
+    
+    if (token) {
+      try {
+        let decoded = jwt.verify(token, secrets.JWT_SECRET);
+        req.decodedToken = decoded;
+        res.redirect('participants');
+      } catch (err) {
+        next();
+      }
+    } else {
+    //   res.status(401).send({ error: "Token is required" });
+    }
+  };
 
-app.get("/", (req, res) => {
-  res.send(generateLoginPage());
+app.get('/', jwtValidateNotLoggedIn, (req, res) => {
+
+    res.render('login');
 });
+
+app.post('/login', async (req, res) => {
+
+
+    if(req.body.username == secrets.ADMIN_USERNAME && req.body.password == secrets.ADMIN_PASSWORD) {
+        let token = jwt.sign(
+            {
+              username: req.body.username,
+              exp: Math.floor(Date.now() / 1000) + 3600
+            },
+            secrets.JWT_SECRET
+          );
+        
+        const serialized = cookie.serialize(headerTokenKey, token, {
+            secure: true,
+            httpOnly: true
+          });
+        res.setHeader('Set-Cookie', serialized)
+        return res.redirect('participants');
+    } else {
+        return res.status(401).send();
+    }
+});
+
+app.post('/logout', (req, res) => {
+    res.clearCookie(headerTokenKey)
+    return res.redirect('/');
+});
+
+app.get('/setcookie', (req, res) => {
+    res.cookie(`Cookie token name`,`encrypted cookie string Value`);
+    res.send('Cookie have been saved successfully');
+});
+
+app.get('/participants', jwtValidateUserMiddleware, async (req, res) => {
+    // let participants = testParticipants;
+
+    let participants = await getParticipants();
+
+    
+    res.render('participants', {participants});
+});
+
+async function getParticipants() {
+    var participants = [];
+    try {
+        await mongoClient.connect();
+        var participantSurveys = await mongoClient
+          .db("surveys")
+          .collection("survey")
+          .find({})
+        await participantSurveys.forEach(survey => {
+            let participant =     {
+                _id : survey._id,
+                phoneNumber : survey.phoneNumber,
+                symptoms : [],
+                dateEnrolled : new Date(Timestamp(survey.surveyStarted).getHighBits() * 1000)
+            }
+            if(survey.progress[0] == 'END') {
+                participant.completionStatus = true;
+            } else {
+                participant.completionStatus = false;
+            }
+            survey.completedSymptomSurvey.forEach((completedSymptom, index) => {
+                if(
+                    completedSymptom == 'Sadness' ||
+                    completedSymptom == 'Headache' ||
+                    completedSymptom == 'Dizziness' ||
+                    completedSymptom == 'Nausea' ||
+                    completedSymptom == 'Fatigue'
+                ){
+                    let symptom = {
+                        symptom : completedSymptom,
+                        severity : null
+                    }
+                    console.log()
+                    if(survey.severity && survey.severity[index]) {
+                        symptom.severity = survey.severity[index]
+                    }
+                    participant.symptoms.push(symptom)
+                }
+            });
+            participants.push(participant)
+        })
+
+      } finally {
+        return participants;
+
+        await mongoClient.close();
+      }
+}
 
 // Parse URL-encoded bodies (as sent by HTML forms)
 app.use(express.urlencoded());
@@ -350,16 +490,13 @@ app.use(express.urlencoded());
 // Parse JSON bodies (as sent by API clients)
 app.use(express.json());
 
-app.post("/", (req, res) => {
-  console.log(req.body.userName + " " + req.body.password);
-  if (
-    req.body != null &&
-    req.body.userName == "admin" &&
-    req.body.password == "password"
-  )
-    res.send(findCurrentSurveys());
-  else res.send(generateLoginPage());
-});
+// app.post("/", (req, res) => {
+//     console.log(req.body.userName + " " + req.body.password);
+//     if (req.body != null && req.body.userName == "admin" && req.body.password=="password") 
+//         res.send(findCurrentSurveys());
+//     else
+//         res.send(generateLoginPage());
+// });
 
 function testMsg() {
   twilioClient.messages
