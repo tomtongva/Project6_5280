@@ -25,7 +25,7 @@ app.use(bodyParser.json())
 
 
 
-const { MongoClient, Timestamp } = require("mongodb");
+const { MongoClient, Timestamp, ObjectId } = require("mongodb");
 const uri =
   "mongodb+srv://group35280:uncc2022@cluster0.rts9eht.mongodb.net/test";
 const mongoClient = new MongoClient(uri);
@@ -359,9 +359,13 @@ const jwtValidateUserMiddleware = (req, res, next) => {
       try {
         let decoded = jwt.verify(token, secrets.JWT_SECRET);
         req.decodedToken = decoded;
-        next();
+        if(decoded.username == secrets.ADMIN_USERNAME) {
+            next();
+        } else {
+            res.status(401).redirect('/')
+        }
       } catch (err) {
-        res.redirect('/');
+        res.status(401).redirect('/');
       }
     } else {
     //   res.status(401).send({ error: "Token is required" });
@@ -414,6 +418,12 @@ app.post('/login', async (req, res) => {
     } else {
         return res.status(401).send();
     }
+});
+
+app.post('/adminDelete', jwtValidateUserMiddleware, async (req, res) => {
+    console.log(req.body)
+    await deleteSurveyAdmin(req.body.id);
+    return res.redirect('participants');
 });
 
 app.post('/logout', (req, res) => {
@@ -716,6 +726,21 @@ async function deleteSurvey(phoneNumber) {
     await mongoClient.close();
   }
 }
+
+async function deleteSurveyAdmin(id) {
+    try {
+      await mongoClient.connect();
+  
+      var survey = await mongoClient
+        .db("surveys")
+        .collection("survey")
+        .deleteOne({ _id: ObjectId(id) });
+  
+      return survey;
+    } finally {
+      await mongoClient.close();
+    }
+  }
 
 // *********************************** END MONGODB ***********************************
 
