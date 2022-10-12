@@ -421,7 +421,6 @@ app.post('/login', async (req, res) => {
 });
 
 app.post('/adminDelete', jwtValidateUserMiddleware, async (req, res) => {
-    console.log(req.body)
     await deleteSurveyAdmin(req.body.id);
     return res.redirect('participants');
 });
@@ -453,44 +452,50 @@ async function getParticipants() {
           .db("surveys")
           .collection("survey")
           .find({})
-        await participantSurveys.forEach(survey => {
+        await participantSurveys.forEach(survey => {            
+            
             let participant =     {
                 _id : survey._id,
                 phoneNumber : survey.phoneNumber,
                 symptoms : [],
                 dateEnrolled : new Date(Timestamp(survey.surveyStarted).getHighBits() * 1000)
             }
+
+
             if(survey.progress[0] == 'END') {
                 participant.completionStatus = true;
             } else {
                 participant.completionStatus = false;
             }
-            survey.completedSymptomSurvey.forEach((completedSymptom, index) => {
-                if(
-                    completedSymptom == 'Sadness' ||
-                    completedSymptom == 'Headache' ||
-                    completedSymptom == 'Dizziness' ||
-                    completedSymptom == 'Nausea' ||
-                    completedSymptom == 'Fatigue'
-                ){
-                    let symptom = {
-                        symptom : completedSymptom,
-                        severity : null
+
+            if(survey.completedSymptomSurvey) {
+                survey.completedSymptomSurvey.forEach((completedSymptom, index) => {
+                    if(
+                        completedSymptom == 'Sadness' ||
+                        completedSymptom == 'Headache' ||
+                        completedSymptom == 'Dizziness' ||
+                        completedSymptom == 'Nausea' ||
+                        completedSymptom == 'Fatigue'
+                    ){
+                        let symptom = {
+                            symptom : completedSymptom,
+                            severity : null
+                        }
+                        if(survey.severity && survey.severity[index]) {
+                            symptom.severity = survey.severity[index]
+                        }
+                        participant.symptoms.push(symptom)
                     }
-                    console.log()
-                    if(survey.severity && survey.severity[index]) {
-                        symptom.severity = survey.severity[index]
-                    }
-                    participant.symptoms.push(symptom)
-                }
-            });
+                });
+            }
             participants.push(participant)
         })
 
       } finally {
-        return participants;
+        
 
         await mongoClient.close();
+        return participants;
       }
 }
 
@@ -747,6 +752,5 @@ async function deleteSurveyAdmin(id) {
 // *********************************** START ENDPOINT ***********************************
 app.listen(process.env.PORT || port, () => {
   console.log(`Listening on port ${port}`);
-  console.log(`${process.env.PORT}`);
 });
 // *********************************** END ENDPOINT ***********************************
