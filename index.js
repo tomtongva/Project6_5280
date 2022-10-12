@@ -254,7 +254,7 @@ function generateLoginPage() {
     responseMsg += "Password: <input type='password' name='password' /> <br />";
     responseMsg += "<input type='Submit' />";
     responseMsg += "</form>";
-
+    responseMsg = 'hello world'
     return responseMsg;
 }
 
