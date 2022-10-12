@@ -17,6 +17,7 @@ const authToken = '7148510de1995ea197ebc2ef68fa06df'; // Your Auth Token from ww
 
 const twilioClient = new twilio(accountSid, authToken);
 
+app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({extended:false}));
 
 // *********************************** START TWILIO ***********************************
@@ -248,18 +249,12 @@ function removeValueFromArray(array, value) {
     }
 }
 
-function generateLoginPage() {
-    let responseMsg = "<form action='#' method='post'> <br />";
-    responseMsg += "User name: <input type='text' id='userName' name='userName' /> <br />";
-    responseMsg += "Password: <input type='password' name='password' /> <br />";
-    responseMsg += "<input type='Submit' />";
-    responseMsg += "</form>";
-    responseMsg = 'hello world'
-    return responseMsg;
-}
+app.get('/', (req, res) => {
+    res.render('login');
+});
 
 app.get('/', (req, res) => {
-    res.send(generateLoginPage());
+    res.render('login');
 });
 
 // Parse URL-encoded bodies (as sent by HTML forms)
