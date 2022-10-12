@@ -1,6 +1,18 @@
 const twilio = require('twilio');
 const { MessagingResponse } = require('twilio').twiml; // respond to text message
 const { TaskQueueRealTimeStatisticsPage } = require('twilio/lib/rest/taskrouter/v1/workspace/taskQueue/taskQueueRealTimeStatistics');
+const cookieParser = require('cookie-parser');
+
+
+const jwt = require("jsonwebtoken");
+const headerTokenKey = "x-jwt-token";
+
+//In a production system, these would be stored somewhere safe, like a vault or secrets manager
+const secrets = {
+    ADMIN_USERNAME : 'admin',
+    ADMIN_PASSWORD : 'password', 
+    JWT_SECRET : 'Group3KeyForJWT'
+}
 
 const express = require('express');
 const app = express();
@@ -21,6 +33,7 @@ const twilioClient = new twilio(accountSid, authToken);
 
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({extended:false}));
+app.use(cookieParser());
 
 // *********************************** START TWILIO ***********************************
 async function getRemainingSymptoms(req) {
@@ -251,14 +264,58 @@ function removeValueFromArray(array, value) {
     }
 }
 
+const jwtValidateUserMiddleware = (req, res, next) => {
+  
+    let token = req.cookies[headerTokenKey];
+    if(token === undefined) {
+        res.status(401).redirect('/');
+    }
+    
+    if (token) {
+      try {
+        let decoded = jwt.verify(token, secrets.JWT_SECRET);
+        req.decodedToken = decoded;
+        next();
+      } catch (err) {
+        res.status(401).send({ error: "Invalid token", fullError: err });
+      }
+    } else {
+    //   res.status(401).send({ error: "Token is required" });
+    }
+  };
+
 app.get('/', (req, res) => {
+
     res.render('login');
 });
 
-app.get('/participants', (req, res) => {
+app.post('/login', async (req, res) => {
+    console.log(req.body.username)
+    console.log(req.body.username)
+
+    if(req.body.username == secrets.ADMIN_USERNAME && req.body.password == secrets.ADMIN_PASSWORD) {
+        let token = jwt.sign(
+            {
+              username: req.body.username,
+              exp: Math.floor(Date.now() / 1000) + 3600
+            },
+            secrets.JWT_SECRET
+          );
+        console.log(headerTokenKey)
+        console.log(token)
+        res.cookie(headerTokenKey, token, {maxAge: 3600, httpOnly:true, secure: true}).send()
+    } else {
+        return res.redirect('/');
+    }
+});
+
+
+
+app.get('/participants', jwtValidateUserMiddleware, (req, res) => {
     let participants = testParticipants;
     res.render('participants', {participants});
 });
+
 
 // Parse URL-encoded bodies (as sent by HTML forms)
 app.use(express.urlencoded());
@@ -266,13 +323,13 @@ app.use(express.urlencoded());
 // Parse JSON bodies (as sent by API clients)
 app.use(express.json());
 
-app.post("/", (req, res) => {
-    console.log(req.body.userName + " " + req.body.password);
-    if (req.body != null && req.body.userName == "admin" && req.body.password=="password") 
-        res.send(findCurrentSurveys());
-    else
-        res.send(generateLoginPage());
-});
+// app.post("/", (req, res) => {
+//     console.log(req.body.userName + " " + req.body.password);
+//     if (req.body != null && req.body.userName == "admin" && req.body.password=="password") 
+//         res.send(findCurrentSurveys());
+//     else
+//         res.send(generateLoginPage());
+// });
 
 function testMsg() {
     twilioClient.messages
