@@ -1,1 +1,28 @@
-<p>This is a test participant <%= participant %></p>
+<div class="card shadow-sm my-3 p-3">
+    <div class="row">
+        <div class="col-4">
+            <p><strong>Number: </strong><%= participant.phoneNumber %></p>
+            <p><strong>Competion Status: </strong><%= participant.completionStatus %></p>
+        </div>
+        <div class="col-4">
+            <p><strong>Date Enrolled: </strong><%= participant.dateEnrolled %></p>
+        </div>
+        <div class="col-4 d-inline-flex justify-content-end">
+            <form action="/adminDelete" method="post">
+                <input type="hidden" name="id" value=<%= participant._id %> />
+                <input type="submit" name="delete" value="Delete" class="btn btn-danger" />
+            </form>
+        </div>
+    </div>
+    <hr>
+    <div class="row">
+        <%participant.symptoms.sort((a,b) => { if(b.severity != a.severity) { return b.severity - a.severity } else { return b.symptom.localeCompare(a.symptom)}}).forEach(symptom=>{%>
+            <div class="col">
+                <div class="border rounded p-3">
+                    <p><strong>Symptom: </strong><%=  symptom.symptom%></p>
+                    <p><strong>Severity: </strong><%=  symptom.severity%></p>
+                </div>
+            </div>
+         <% }) %> 
+    </div>
+</div>

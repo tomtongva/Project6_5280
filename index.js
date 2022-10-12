@@ -6,6 +6,8 @@ const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
 const port = 80;
+var testParticipants = require('./participants.json');
+
 
 const { MongoClient, Timestamp } = require("mongodb");
 const uri ="mongodb+srv://group35280:uncc2022@cluster0.rts9eht.mongodb.net/test";
@@ -254,7 +256,7 @@ app.get('/', (req, res) => {
 });
 
 app.get('/participants', (req, res) => {
-    let participants = [1,2,3,4,5];
+    let participants = testParticipants;
     res.render('participants', {participants});
 });
 
