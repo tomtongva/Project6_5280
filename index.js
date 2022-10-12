@@ -179,7 +179,7 @@ app.post("/sms", async (req, res) => {
         console.log(
           "update user's survey with completed symptom " + lastProgress
         );
-        await updateCompletedSurvey(req.body.From, lastProgress);
+        await updateCompletedSurvey(req.body.From, lastProgress, reqText);
 
         let maxSurveyResult = await maxSurveyReached(
           twiml,
@@ -294,7 +294,7 @@ app.post("/sms", async (req, res) => {
           console.log(
             "update user's survey with completed symptom " + lastProgress
           );
-          await updateCompletedSurvey(req.body.From, lastProgress);
+          await updateCompletedSurvey(req.body.From, lastProgress, "");
 
           let maxSurveyResult = await maxSurveyReached(
             twiml,
@@ -432,7 +432,11 @@ async function updateSurvey(phoneNumber, progress) {
   }
 }
 
-async function updateCompletedSurvey(phoneNumber, symptomDescription) {
+async function updateCompletedSurvey(
+  phoneNumber,
+  symptomDescription,
+  severity
+) {
   symptomDescription = symptomDescription.trim();
   try {
     await mongoClient.connect();
@@ -445,7 +449,10 @@ async function updateCompletedSurvey(phoneNumber, symptomDescription) {
           phoneNumber: phoneNumber,
         },
         {
-          $push: { completedSymptomSurvey: symptomDescription },
+          $push: {
+            completedSymptomSurvey: symptomDescription,
+            severity: severity,
+          },
         }
       );
 
